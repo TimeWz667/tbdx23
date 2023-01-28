@@ -1,4 +1,5 @@
 library(tidyverse)
+library(jsonlite)
 
 theme_set(theme_bw() + theme(text = element_text(family = "sans")))
 
@@ -105,6 +106,15 @@ calc_intv <- function(df, or_pdx0 = 1, or_pdx1 = 1,
 
 pars_ind <- read_csv(here::here("results", "pars_IND.csv"))
 pars_zaf <- read_csv(here::here("results", "pars_ZAF.csv"))
+
+js <- list(
+  IND = pars_ind[1:300, ],
+  ZAF = pars_zaf[1:300, ]
+)
+
+
+jsonlite::write_json(js, here::here("results/pars.json"), digits = 10)
+
 
 pars <- bind_rows(
   pars_ind %>% mutate(Country = "IND"),
