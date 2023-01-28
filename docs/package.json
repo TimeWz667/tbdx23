@@ -1,0 +1,26 @@
+{
+  "name": "tbdx23",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "authors": {
+    "name": "Chu-Chang Ku",
+    "email": "cku@ic.ac.uk"
+  },
+  "repository": "TimeWz667/tbdx23",
+  "scripts": {
+    "dev": "vuepress dev src",
+    "build": "vuepress build src"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "vuepress": "^1.5.3"
+  },
+  "dependencies": {
+    "bootstrap": "^5.1.0",
+    "bootstrap-vue": "^2.21.2",
+    "lodash": "^4.17.21",
+    "node-sass": "^6.0.1",
+    "sass-loader": "^12.1.0"
+  }
+}
