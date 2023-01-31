@@ -4,7 +4,7 @@ module.exports = {
   title: 'Cascade tester',
 
   description: description,
-
+  publicPath: '/tbdx23/',
   head: [
     ['meta', { name: 'theme-color', content: '#3eaf7c' }],
     ['meta', { name: 'apple-mobile-web-app-capable', content: 'yes' }],

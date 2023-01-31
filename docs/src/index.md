@@ -13,7 +13,6 @@ footer: Made by Chu-Chang Ku
             <a href="/ind/">
                 <div class="card-body">
                     <h4 class="card-title">India</h4>
-                    <p class="card-text">fig</p>
                 </div>
             </a>
             </div>
@@ -23,7 +22,6 @@ footer: Made by Chu-Chang Ku
             <a href="/rsa/">
                 <div class="card-body">
                     <h4 class="card-title">South Africa</h4>
-                    <p class="card-text">fig</p>
                 </div>
             </a>
             </div>
