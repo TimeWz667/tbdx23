@@ -28,7 +28,7 @@ calc_prev <- function(df) {
 }
 
 
-calc_cascade <- function(df, pdx0 = 0.4, pdx1 = 0.7, sc = "baseline") {
+calc_reform <- function(df, pdx0 = 0.4, pdx1 = 0.7) {
   df %>% 
     mutate(
       det = r_det * prv_c,
@@ -41,43 +41,27 @@ calc_cascade <- function(df, pdx0 = 0.4, pdx1 = 0.7, sc = "baseline") {
       r_recsi = det1 / (pdx1 * prv_c)
     ) %>% 
     select(Country, prv_a, prv_s, prv_c, r_sym, 
-           r_csi, r_recsi, pdx0, pdx1, ra, rs, rc, adr, p_under) %>% 
-    mutate(
-      inc = (r_sym + ra - adr) * prv_a,
-      det0 = r_csi * pdx0 * prv_s,
-      det1 = r_recsi * pdx1 * prv_c,
-      dur_a = 1 / (r_sym + ra),
-      dur_s = 1 / (r_csi + rs),
-      dur_c = 1 / (r_recsi * pdx1 + rc),
-      drop_a = ra * dur_a,
-      drop_s = rs * dur_s,
-      drop_c = rc * dur_c,
-      
-      Delay_Pat = dur_s,
-      NoSys = r_csi * pdx0 * dur_s,
-      Delay_Sys = (1 - NoSys) * dur_c,
-      Delay_Tot = Delay_Pat + Delay_Sys,
-      
-      Pr_Det = r_sym * dur_a * (r_csi *      pdx0  * dur_s),
-      Pr_Det = Pr_Det + r_sym * dur_a * (r_csi * (1 - pdx0) * dur_s * r_recsi * pdx1 * dur_c),
-      Pr_Notif = Pr_Det * (1 - p_under),
-      Scenario = sc
-    )
+           r_csi, r_recsi, pdx0, pdx1, ra, rs, rc, adr, p_under)
 }
 
 
 calc_intv <- function(df, or_pdx0 = 1, or_pdx1 = 1, 
-                      rr_csi = 1, rr_recsi = 1, sc = "intv") {
+                      rr_csi = 1, rr_recsi = 1) {
   df %>% 
     mutate(
-      odd = or_pdx0 * pdx0 / (1 - pdx0),
-      pdx0 = odd / (1 + odd),
-      odd = or_pdx1 * pdx1 / (1 - pdx1),
-      pdx1 = odd / (1 + odd),
-      r_csi = rr_csi * r_csi,
-      r_recsi = rr_recsi * r_recsi
-    ) %>% 
-    select(-odd) %>% 
+    odd = or_pdx0 * pdx0 / (1 - pdx0),
+    pdx0 = odd / (1 + odd),
+    odd = or_pdx1 * pdx1 / (1 - pdx1),
+    pdx1 = odd / (1 + odd),
+    r_csi = rr_csi * r_csi,
+    r_recsi = rr_recsi * r_recsi
+  ) %>% 
+    select(-odd)
+}
+
+
+calc_cascade <- function(df, sc = "baseline") {
+  df %>% 
     mutate(
       inc = (r_sym + ra - adr) * prv_a,
       det0 = r_csi * pdx0 * prv_s,
@@ -89,13 +73,16 @@ calc_intv <- function(df, or_pdx0 = 1, or_pdx1 = 1,
       drop_s = rs * dur_s,
       drop_c = rc * dur_c,
       
+      pd0 = r_csi * pdx0 * dur_s,
+      pd1 = r_recsi * pdx1 * dur_c,
+      k = pd0 + pd1,
+      
       Delay_Pat = dur_s,
-      NoSys = r_csi * pdx0 * dur_s,
-      Delay_Sys = (1 - NoSys) * dur_c,
+      Delay_Sys = pd1 / k * dur_c,
       Delay_Tot = Delay_Pat + Delay_Sys,
       
-      Pr_Det = r_sym * dur_a * (r_csi *      pdx0  * dur_s),
-      Pr_Det = Pr_Det + r_sym * dur_a * (r_csi * (1 - pdx0) * dur_s * r_recsi * pdx1 * dur_c),
+      Pr_Det = r_sym * dur_a * pd0,
+      Pr_Det = Pr_Det + r_sym * dur_a * (r_csi * (1 - pdx0) * dur_s) * pd1,
       Pr_Notif = Pr_Det * (1 - p_under),
       Scenario = sc
     )
@@ -113,26 +100,33 @@ js <- list(
 )
 
 
-jsonlite::write_json(js, here::here("results/pars.json"), digits = 10)
+# jsonlite::write_json(js, here::here("results/pars.json"), digits = 10)
 
 
 pars <- bind_rows(
   pars_ind %>% mutate(Country = "IND"),
   pars_zaf %>% mutate(Country = "ZAF")
-)
+) %>% 
+  calc_prev()
 
 
-
-p_cas0 <- pars %>% 
-  calc_prev() %>% 
-  calc_cascade(pdx0 = 0.4, pdx1 = 0.7, sc = "Baseline") 
-
-p_cas1 <- p_cas0 %>% 
-  calc_intv(or_pdx0 = 1.5, or_pdx1 = 1.5, sc = "DxImp: 1.5")
+pars0 <- pars %>% 
+  calc_reform(pdx0 = 0.35, pdx1 = 0.7)
 
 
-p_cas2 <- p_cas0 %>% 
-  calc_intv(rr_csi = 2, rr_recsi = 1, sc = "CSI: 2")
+p_cas0 <- pars0 %>% 
+  calc_cascade(sc = "Baseline")
+
+
+p_cas1 <- pars0 %>% 
+  calc_intv(or_pdx0 = 1.5, or_pdx1 = 1.5) %>% 
+  calc_cascade(sc = "DxImp: 1.5")
+
+
+p_cas2 <- pars0 %>% 
+  calc_intv(rr_csi = 2, rr_recsi = 1) %>% 
+  calc_cascade(sc = "CSI: 2")
+
 
 
 cas <- bind_rows(
@@ -169,7 +163,7 @@ cas %>%
   facet_grid(. ~ Country) +
   scale_y_continuous("Cascade, % incidence", labels = scales::percent_format()) +
   scale_x_discrete("Type", labels = c(Det = "Detected", Notif = "Notified")) +
-  expand_limits(x = 0)
+  expand_limits(x = c(0, 1))
 
 
 

@@ -19,9 +19,9 @@
 
           <h4>Baseline</h4>
           <label for="r_prdx0" class="form-label">PrDx at first care-seeking: {{`${(Inputs.pdx0 * 100).toFixed()}%`}}</label>
-          <input type="range" class="form-range" id="r_prdx0" v-model="Inputs.pdx0" min="0.1" max="1" step="0.01">
+          <input type="range" class="form-range" id="r_prdx0" v-model="Inputs.pdx0" min="0.1" max="0.95" step="0.01">
           <label for="r_prdx1" class="form-label">PrDx at revisiting care-seeking: {{`${(Inputs.pdx1 * 100).toFixed()}%`}}</label>
-          <input type="range" class="form-range" id="r_prdx1" v-model="Inputs.pdx1" min="0.1" max="1" step="0.01">
+          <input type="range" class="form-range" id="r_prdx1" v-model="Inputs.pdx1" min="0.1" max="0.95" step="0.01">
         </div>
         <div class="col-md-6">
           <h4>TB care improvements</h4>
@@ -30,9 +30,9 @@
           <label for="r_r1" class="form-label">Relative rate of revisiting: {{`${(Inputs.rr_recsi * 1).toFixed(1)}`}}</label>
           <input type="range" class="form-range" id="r_r1" v-model="Inputs.rr_recsi" min="1" max="10" step="0.1">
           <label for="r_dx0" class="form-label">Odds ratio of PrDx at initial care-seeking: {{`${(Inputs.or_pdx0 * 1).toFixed(1)}`}}</label>
-          <input type="range" class="form-range" id="r_dx0" v-model="Inputs.or_pdx0" min="1" max="10" step="0.1">
+          <input type="range" class="form-range" id="r_dx0" v-model="Inputs.or_pdx0" min="1" max="20" step="0.1">
           <label for="r_dx1" class="form-label">Odds ratio of PrDx at revisiting: {{`${(Inputs.or_pdx1 * 1).toFixed(1)}`}}</label>
-          <input type="range" class="form-range" id="r_dx1" v-model="Inputs.or_pdx1" min="1" max="10" step="0.1">
+          <input type="range" class="form-range" id="r_dx1" v-model="Inputs.or_pdx1" min="1" max="20" step="0.1">
         </div>
       </div>
       <div class="row">
@@ -46,51 +46,63 @@
               {{`${(Stats[0].dur * 12).toFixed(1)}`}} months -> {{`${(Stats[1].dur * 12).toFixed(1)}`}} months</li>
           </ul>
         </div>
-        <div class="col-md-4">
-          <div class="card">
-            <div class="card-header">
-              Cascade
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">Baseline</h5>
-              <p>Detection from first care-seeking</p>
-              <div>{{fmt_ps(Results.Cas0.FromDx0)}}</div>
-              <p>Case detection</p>
-              <div>{{fmt_ps(Results.Cas0.Detect)}}</div>
-              <p>Case notification</p>
-              <div>{{fmt_ps(Results.Cas0.Report)}}</div>
-              <h5 class="card-title">Improved TB care</h5>
-              <p>Detection from first care-seeking</p>
-              <div>{{fmt_ps(Results.Cas1.FromDx0)}}</div>
-              <p>Case detection</p>
-              <div>{{fmt_ps(Results.Cas1.Detect)}}</div>
-              <p>Case notification</p>
-              <div>{{fmt_ps(Results.Cas1.Report)}}</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="card">
-            <div class="card-header">
-              Delays
-            </div>
-            <div class="card-body">
-              <h5 class="card-title">Baseline</h5>
-              <p>Patient Delay</p>
-              <div>{{fmt_durs(Results.Delay0.Pat)}}</div>
-              <p>System Delay</p>
-              <div>{{fmt_durs(Results.Delay0.Sys)}}</div>
-              <p>Total Delay</p>
-              <div>{{fmt_durs(Results.Delay0.Tot)}}</div>
-              <h5 class="card-title">Improved TB care</h5>
-              <p>Patient Delay</p>
-              <div>{{fmt_durs(Results.Delay1.Pat)}}</div>
-              <p>System Delay</p>
-              <div>{{fmt_durs(Results.Delay1.Sys)}}</div>
-              <p>Total Delay</p>
-              <div>{{fmt_durs(Results.Delay1.Tot)}}</div>
-            </div>
-          </div>
+        <div class="col-md-8">
+          <b-tabs content-class="mt-3">
+            <b-tab title="Visualisation" active>
+              <vis :results="Results"></vis>
+            </b-tab>
+            <b-tab title="Values">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      Cascade
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title">Baseline</h5>
+                      <p>Detection from first care-seeking</p>
+                      <div>{{fmt_ps(Results.Cas0.FromDx0)}}</div>
+                      <p>Case detection</p>
+                      <div>{{fmt_ps(Results.Cas0.Detect)}}</div>
+                      <p>Case notification</p>
+                      <div>{{fmt_ps(Results.Cas0.Report)}}</div>
+                      <h5 class="card-title">Improved TB care</h5>
+                      <p>Detection from first care-seeking</p>
+                      <div>{{fmt_ps(Results.Cas1.FromDx0)}}</div>
+                      <p>Case detection</p>
+                      <div>{{fmt_ps(Results.Cas1.Detect)}}</div>
+                      <p>Case notification</p>
+                      <div>{{fmt_ps(Results.Cas1.Report)}}</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header">
+                      Delays
+                    </div>
+                    <div class="card-body">
+                      <h5 class="card-title">Baseline</h5>
+                      <p>Patient Delay</p>
+                      <div>{{fmt_durs(Results.Delay0.Pat)}}</div>
+                      <p>System Delay</p>
+                      <div>{{fmt_durs(Results.Delay0.Sys)}}</div>
+                      <p>Total Delay</p>
+                      <div>{{fmt_durs(Results.Delay0.Tot)}}</div>
+                      <h5 class="card-title">Improved TB care</h5>
+                      <p>Patient Delay</p>
+                      <div>{{fmt_durs(Results.Delay1.Pat)}}</div>
+                      <p>System Delay</p>
+                      <div>{{fmt_durs(Results.Delay1.Sys)}}</div>
+                      <p>Total Delay</p>
+                      <div>{{fmt_durs(Results.Delay1.Tot)}}</div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </b-tab>
+          </b-tabs>
         </div>
       </div>
     </div>
@@ -101,10 +113,14 @@
 <script>
 import pars from "../assets/pars.json";
 import {quantileSeq, exp, median} from "mathjs";
+import vis from "./visual.vue";
 
 
 export default {
   name: "v-cascade",
+  components: {
+    vis
+  },
   computed: {
     Country() {
       switch (this.Setting) {
@@ -221,7 +237,7 @@ export default {
         r.adr = p.adr;
         r.p_under = p.p_under;
         return r;
-      });
+      }).filter(r => r.r_recsi > 0);
 
       this.Stats[0] = {
         pdx0: median(this.ReformedPars0.map(p => p.pdx0)),
@@ -274,7 +290,7 @@ export default {
         r.r_csi *= this.Inputs.rr_csi;
         r.r_recsi *= this.Inputs.rr_recsi;
         return r;
-      });
+      }).filter(r => r.r_recsi > 0);
 
       this.Stats[1] = {
         pdx0: median(this.ReformedPars1.map(p => p.pdx0)),
