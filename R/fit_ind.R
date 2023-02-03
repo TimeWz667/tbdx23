@@ -19,7 +19,7 @@ d_pop <- d_pop_all %>%
 dat <- list(
   Years = d_burden$Year,
   n_t = nrow(d_burden),
-  Inc_mu = d_burden$Inc_M,
+  Inc_mu = d_burden$Inc_M * 0.9,
   Inc_sig = (d_burden$Inc_U - d_burden$Inc_L) / 2 / 1.96,
   Pop = d_pop$N_Pop,
   Case = d_case_all$N_Case,

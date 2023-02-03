@@ -47,7 +47,7 @@ exo <- list(
   r_death_s = 0.12,
   r_death_bg = d_pop %>% summarise(r = weighted.mean(R_Die, N_Pop)) %>% pull(r),
   scale_dur = 1,
-  ppv = 0.8
+  ppv = 0.7
 )
 
 
