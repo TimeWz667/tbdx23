@@ -7,7 +7,7 @@ r_prior <- function(iso = "IND") {
     r_clear = runif(1, 0.02, 0.04),
     beta = runif(1, 1, ifelse(iso == "IND", 20, 40)),
     p_im = runif(1, 0.69, 0.86),
-    adr = runif(1, 0, ifelse(iso == "IND", 0.03, 0.2))
+    adr = runif(1, 0, ifelse(iso == "IND", 0.05, 0.2))
   )
 }
 

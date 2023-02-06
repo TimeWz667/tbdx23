@@ -14,7 +14,7 @@ m <- odin::odin("odin/d_tb.R")
 
 year0 <- 2010
 p_eps <- 0.02
-n_post <- 300
+n_post <- 200
 
 for (country in c("IND", "ZAF")) {
   iso <- glue::glue(country)
