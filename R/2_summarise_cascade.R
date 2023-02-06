@@ -57,9 +57,9 @@ cas <- bind_rows(
   select(Country, Scenario, starts_with("Delay"), starts_with("Pr_")) %>% 
   group_by(Country, Scenario) %>% 
   summarise(across(everything(), list(
-    M = median,
-    L = function(x) quantile(x, 0.025),
-    U = function(x) quantile(x, 0.975)
+    M = function(x) quantile(x, 0.5, na.rm = T),
+    L = function(x) quantile(x, 0.025, na.rm = T),
+    U = function(x) quantile(x, 0.975, na.rm = T)
   ))) %>% 
   pivot_longer(-c(Country, Scenario)) %>% 
   separate(name, c("Type", "Index", "name")) %>% 
@@ -90,7 +90,7 @@ g_cascade <- cas %>%
   facet_grid(. ~ Country) +
   scale_y_continuous("Cascade, % incidence", labels = scales::percent_format()) +
   scale_x_discrete("Type", labels = c(Det = "Detected", Notif = "Notified")) +
-  expand_limits(x = c(0, 1))
+  expand_limits(y = c(0, 1))
 
 
 g_delay

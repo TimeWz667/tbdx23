@@ -8,3 +8,5 @@
 .config/
 .local/
 .idea/
+
+stan/*.rds

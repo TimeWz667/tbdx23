@@ -24,6 +24,7 @@ calc_prev <- function(df) {
 
 calc_reform <- function(df, pdx0 = 0.4, pdx1 = 0.7) {
   df %>% 
+    select(- pdx0, - pdx1) %>% 
     mutate(
       det = r_det * prv_c,
       pdx0 = pdx0,
@@ -34,9 +35,7 @@ calc_reform <- function(df, pdx0 = 0.4, pdx1 = 0.7) {
       fn0 = r_csi * (1 - pdx0) * prv_s,
       r_recsi = det1 / (pdx1 * prv_c)
     ) %>% 
-    select(Country, prv_a, prv_s, prv_c, r_sym, 
-           r_sc, r_death_a, r_death_s, r_death_bg, 
-           r_csi, r_recsi, pdx0, pdx1, ra, rs, rc, adr, p_under)
+    select(-det, -det0, -det1, -fn0)
 }
 
 

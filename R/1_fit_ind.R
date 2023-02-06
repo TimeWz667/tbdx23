@@ -21,6 +21,8 @@ dat <- list(
   n_t = nrow(d_burden),
   Inc_mu = d_burden$Inc_M * 0.9,
   Inc_sig = (d_burden$Inc_U - d_burden$Inc_L) / 2 / 1.96,
+  Mor_mu = d_burden$Mor_M * 0.9,
+  Mor_sig = (d_burden$Mor_U - d_burden$Mor_L) / 2 / 1.96,
   Pop = d_pop$N_Pop,
   Case = d_case_all$N_Case,
   Amp_age = d_case_all$Amp_age,
@@ -41,11 +43,10 @@ prev <- local({
 
 
 exo <- list(
-  r_death_a = 0,
   r_death_s = 0.12,
   r_death_bg = d_pop %>% summarise(r = weighted.mean(R_Die, N_Pop)) %>% pull(r),
   scale_dur = 1,
-  ppv = 0.8
+  p_tx_die = 0.05
 )
 
 
@@ -60,7 +61,8 @@ post <- rstan::sampling(m_cas, data = dat, iter = 5000, warmup = 4500)
 summary(post)$summary
 
 
-tab <- data.frame(rstan::extract(post, pars = c("prv0", "adr", "r_sym", "r_aware", "r_det", "r_sc", "p_under"))) %>% 
+tab <- data.frame(rstan::extract(post, pars = c("prv0", "adr", "r_death_a", "r_death_tx", 
+                                                "r_sym", "r_aware", "r_det", "r_sc", "p_under", "ppv"))) %>% 
   as_tibble() %>% 
   bind_cols(exo) %>% 
   mutate(
@@ -70,6 +72,3 @@ tab <- data.frame(rstan::extract(post, pars = c("prv0", "adr", "r_sym", "r_aware
 
 
 write_csv(tab, file = here::here("results", "pars_IND.csv"))
-
-
-

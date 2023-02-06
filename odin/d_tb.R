@@ -57,9 +57,10 @@ dr_t <- interpolate(years, dr, "linear")
 
 
 r_death_a <- user() 
-r_death_s <- user() 
+r_death_s <- user()
+r_death_tx <- user()
 
-mu_t[] <- (dr_t * sum(Y) - r_death_a * Y[2] - r_death_s * (Y[3] + Y[4])) / sum(Y)
+mu_t[] <- (dr_t * sum(Y) - r_death_a * Y[2] - r_death_s * (Y[3] + Y[4]) - r_death_tx * Y[5]) / sum(Y)
 dim(mu_t) <- n_tb 
 
 
@@ -69,7 +70,8 @@ d_pop[1] <- br_t * sum(Y) - mu_t[1] * Y[1]
 d_pop[2] <- - (r_death_a + mu_t[i]) * Y[i]
 d_pop[3] <- - (r_death_s + mu_t[i]) * Y[i]
 d_pop[4] <- - (r_death_s + mu_t[i]) * Y[i]
-d_pop[5:n_tb] <- - mu_t[i] * Y[i]
+d_pop[5] <- - (r_death_tx + mu_t[i]) * Y[i]
+d_pop[6:n_tb] <- - mu_t[i] * Y[i]
 dim(d_pop) <- c(n_tb)
 
 
@@ -86,14 +88,16 @@ p_under <- user()
 
 dur_tx <- 0.5
 
+r_tx_succ <- 1 / dur_tx
 
 r_act <- r_lat * p_primary / (1 - p_primary)
 p_primary <- user(0.1)
 r_lat <- user(0.5)
 
-r_react <- user(0.0001)
-r_relapse <- user(0.0001)
+r_react <- user(0.001)
+r_relapse <- user(0.001)
 
+r_clear <- user(0.03)
 
 
 beta <- user(10)
@@ -124,14 +128,14 @@ k_beta <- if (t > Year0) exp(- adr * sqrt(t - Year0)) else 1
 foi <- beta * k_beta * (Asym + Sym + ExCS) / n
 rfoi <- foi * (1 - p_im)
 
-d_tb[1] <- - foi * U
+d_tb[1] <- - foi * U + r_clear * (SL + Rec)
 # A, S, C, Tx
 d_tb[2] <- inc - (r_sym + r_sc) * Asym
-d_tb[3] <- r_sym * Asym - (r_csi + r_sc) * Sym
+d_tb[3] <- r_sym * Asym - r_sc * Sym - det0 - fn0
 d_tb[4] <- fn0 - (r_recsi * pdx1 + r_sc) * ExCS
-d_tb[5] <- det - 1 / dur_tx * Tx
+d_tb[5] <- det - r_tx_succ * Tx
 # FL, SL, R
 d_tb[6] <- foi * U + rfoi * (SL + Rec) - (r_act + r_lat) * FL
 d_tb[7] <- r_lat * FL + r_sc * (Asym + Sym + ExCS) - (rfoi + r_react) * SL
-d_tb[8] <- 1 / dur_tx * Tx - (rfoi + r_relapse) * Rec
+d_tb[8] <- r_tx_succ * Tx - (rfoi + r_relapse) * Rec
 dim(d_tb) <- n_tb
