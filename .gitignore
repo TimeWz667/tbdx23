@@ -10,3 +10,6 @@
 .idea/
 
 stan/*.rds
+
+sim/__pycache__/*
+sim/*/__pycache__/*
