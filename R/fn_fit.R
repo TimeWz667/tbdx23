@@ -35,7 +35,7 @@ get_pars_pop <- function(d_pop_all, year0) {
     pars_pop <- c(
       pars_pop,
       list(
-        Y0 = c(0.95, 0.01, 0, 0, 0, 0.03, 0.01, 0) * y0,
+        # Y0 = c(0.95, 0.01, 0, 0, 0, 0.03, 0.01, 0) * y0,
         N0 = y0,
         Year0 = year0
       )

@@ -2,11 +2,11 @@ PCore dy {
         // transmission
         beta ~ unif(1, 20)
 
-        rr_inf_asym ~ unif(0.5, 2)
+        rr_inf_asym = 1
         rr_inf_cs = 1
 
-        rr_sus_slat = 0.79 # unif(0.2, 0.8) # rr of reinfection (SLat vs U)
-        rr_sus_rec = 0.79 # unif(0.14, 0.31)  # rr of reinfection (Rec vs U)
+        rr_sus_slat ~ unif(0.2, 0.8) # rr of reinfection (SLat vs U)
+        rr_sus_rec ~ unif(0.14, 0.31)  # rr of reinfection (Rec vs U)
 
         // Life history
         r_lat = 0.5
