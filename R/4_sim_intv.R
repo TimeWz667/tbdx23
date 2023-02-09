@@ -35,6 +35,8 @@ for (country in c("IND", "ZAF")) {
   post_pars <-read_csv("results/post_pars_" + iso + ".csv") %>% 
     select(-Year0)
   
+  # post_pars <- post_pars[1:30, ]
+  
   
   # Initialise model
   p <- c(post_pars[1, ])
@@ -123,15 +125,17 @@ for (country in c("IND", "ZAF")) {
         mutate(Key = i)
     }))
     
-    bind_rows(sim, ys.start) %>% 
+    bind_rows(sim %>% 
+                group_by(Key) %>% 
+                mutate(
+                  IncR = c((IncR[-n()] + IncR[-1]) / 2, 0),
+                  MorR = c((MorR[-n()] + MorR[-1]) / 2, 0),
+                  Inc = c(Inc[-1], 0),
+                  Mor = c(Mor[-1], 0)
+                ) %>% 
+                ungroup(), 
+              ys.start) %>% 
       mutate(sc = sc) %>% 
-      group_by(Key) %>% 
-      mutate(
-        IncR = c((IncR[-n()] + IncR[-1]) / 2, 0),
-        MorR = c((MorR[-n()] + MorR[-1]) / 2, 0),
-        Inc = c(Inc[-1], 0),
-        Mor = c(Mor[-1], 0)
-      ) %>% 
       filter(Year <= 2035) %>% 
       arrange(Key, Year)
   }
@@ -146,6 +150,7 @@ for (country in c("IND", "ZAF")) {
     sim_intv(post2, ys0, y0s),
     sim_intv(post3, ys0, y0s)
   ) 
+  
   
   stats <- res %>% 
     select(Year, IncR, MorR, Key, sc) %>% 
@@ -177,8 +182,6 @@ for (country in c("IND", "ZAF")) {
     )
   
   
-  
-  
   ys_baseline <- ys0 %>% 
     group_by(Key) %>% 
     mutate(
@@ -191,7 +194,7 @@ for (country in c("IND", "ZAF")) {
     select(Year, MorR, IncR) %>% 
     pivot_longer(-Year, names_to = "Index") %>% 
     group_by(Year, Index) %>% 
-    filter(Year <= 2023) %>% 
+    filter(Year < 2023) %>% 
     summarise(
       M = median(value),
       L = quantile(value, 0.25),
@@ -201,11 +204,11 @@ for (country in c("IND", "ZAF")) {
   
   g_intv0 <- stats %>% 
     rename(Scenario = sc) %>% 
-    filter(Year > 2022) %>% 
     ggplot() +
     geom_ribbon(aes(x = Year, ymin = L, ymax = U, fill = Scenario), alpha = 0.1) +
     geom_line(aes(x = Year, y = M, colour = Scenario)) + 
     scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+    scale_x_continuous("Year", breaks = sort(c(seq(2010, 2035, 5), 2023))) + 
     facet_wrap(.~Index, scales = "free_y", 
                labeller = labeller(Index = c(IncR = "Incidence", MorR = "Mortality"))) +
     expand_limits(y = 0)
@@ -226,6 +229,7 @@ for (country in c("IND", "ZAF")) {
     geom_ribbon(aes(x = Year, ymin = L, ymax = U, fill = Scenario), alpha = 0.1) +
     geom_line(aes(x = Year, y = M, colour = Scenario)) + 
     scale_y_continuous("Case averted", labels = scales::percent_format()) + 
+    scale_x_continuous("Year", breaks = sort(c(seq(2010, 2035, 5), 2023))) + 
     facet_wrap(.~Index, scales = "free_y", 
                labeller = labeller(Index = c(AInc = "Incident cases", AMor = "TB-related deaths"))) +
     expand_limits(y = 0)

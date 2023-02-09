@@ -2,23 +2,21 @@
 calc_prev <- function(df) {
   df %>% 
     mutate(
-      prv = prv0 * exp(- adr * (2023 - Year0)),
+      inc = inc0 * exp(- adr * (2023 - Year0)),
+
       ra = r_sc + r_death_a + r_death_bg,
       rs = r_sc + r_death_s + r_death_bg,
       rc = r_sc + r_death_s + r_death_bg,
       
-      a0 = (rs + r_aware - adr) / r_sym,
-      c0 = r_aware / (rc + r_det - adr),
+      r_aware = r_aware0 * rr_det_t ^ (2023 - Year0),
+      r_det = r_det0 * rr_det_t ^ (2023 - Year0),
       
-      pr_a = a0 / (a0 + 1 + c0),
-      pr_s = 1 / (a0 + 1 + c0),
-      pr_c = c0 / (a0 + 1 + c0),
-      
-      prv_a = prv * pr_a,
-      prv_s = prv * pr_s,
-      prv_c = prv * pr_c,
-    ) %>% 
-    select(-a0, -c0)
+      prv_a = inc / (r_sym + ra - adr),
+      prv_s = prv_a * r_sym / (r_aware + rs - adr),
+      prv_c = prv_s * r_aware / (r_det + rc - adr),
+      pdx0 = 0, 
+      pdx1 = 1
+    )
 }
 
 

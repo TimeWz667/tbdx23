@@ -28,7 +28,7 @@ pars <- bind_rows(
 
 
 pars0 <- pars %>% 
-  calc_reform(pdx0 = 0.4, pdx1 = 0.7)
+  calc_reform(pdx0 = 0.45, pdx1 = 0.45)
 
 
 p_cas0 <- pars0 %>% 
@@ -77,7 +77,7 @@ g_delay <- cas %>%
   geom_bar(aes(y = Index, x = M, fill = Scenario), stat = "identity", alpha = 0.7, position = "dodge") +
   geom_pointrange(aes(y = Index, x = M, xmin = L, xmax = U, group = Scenario), position = position_dodge2(1)) + 
   facet_grid(. ~ Country) +
-  scale_x_continuous("Delay, months", labels = scales::number_format(scale = 12)) +
+  scale_x_continuous("Delay, months", breaks = 0:6/6, labels = scales::number_format(scale = 12)) +
   scale_y_discrete("Type", labels = c(Pat = "Patient", Sys = "System", Tot = "Total")) +
   expand_limits(x = 0)
 
@@ -97,7 +97,7 @@ g_delay
 g_cascade
 
 
-ggsave(g_delay, filename = here::here("results", "g_delay.png"), width = 6, height = 4)
-ggsave(g_cascade, filename = here::here("results", "g_cascade.png"), width = 6, height = 4)
+ggsave(g_delay, filename = here::here("results", "figs", "g_delay.png"), width = 6, height = 4)
+ggsave(g_cascade, filename = here::here("results", "figs", "g_cascade.png"), width = 6, height = 4)
 
 
