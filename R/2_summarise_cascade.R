@@ -79,7 +79,7 @@ g_delay <- cas %>%
   facet_grid(. ~ Country) +
   scale_x_continuous("Delay, months", breaks = 0:6/6, labels = scales::number_format(scale = 12)) +
   scale_y_discrete("Type", labels = c(Pat = "Patient", Sys = "System", Tot = "Total")) +
-  expand_limits(x = 0)
+  expand_limits(x = c(0, 1))
 
 
 g_cascade <- cas %>%

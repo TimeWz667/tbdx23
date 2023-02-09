@@ -24,7 +24,7 @@ for (country in c("ZAF", "IND")) {
     mutate(
       CNR_mu = N_Case / N_Pop,
       CNR_eps = sqrt(CNR_mu * (1 - CNR_mu) / N_Pop),
-      IncR_mu = Inc_M,
+      IncR_mu = Inc_M * ifelse(country == "IND", 1.2, 1),
       IncR_eps = (Inc_U - Inc_L) / 2 / 1.96,
       MorR_mu = Mor_M,
       MorR_eps = (Mor_U - Mor_L) / 2 / 1.96

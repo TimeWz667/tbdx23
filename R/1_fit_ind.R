@@ -32,7 +32,7 @@ dat <- list(
   Years = d_burden$Year,
   n_t = nrow(d_burden),
   adr = adr,
-  inc0 = d_burden$inc0[1],
+  inc0 = d_burden$inc0[1] * 1.2,
 
   Mor_mu = d_burden$Mor_M,
   Mor_sig = (d_burden$Mor_U - d_burden$Mor_L) / 2 / 1.96,
@@ -58,23 +58,28 @@ exo <- list(
   r_death_s = 0.12,
   r_death_bg = d_pop %>% summarise(r = weighted.mean(R_Die, N_Pop)) %>% pull(r),
   scale_dur = 1,
-  p_tx_die = 0.05
+  p_tx_die = 0.05,
+  cap_report = 0.8,
+  ppv = 0.7
 )
 
 
 dat <- c(dat, prev, exo)
 
 
-m_cas <- rstan::stan_model("stan/cascade_t.stan")
+m_cas <- rstan::stan_model("stan/cascade_report.stan")
 
 post <- rstan::sampling(m_cas, data = dat, iter = 5000, warmup = 4500)
 
 summary(post)$summary
 
 summary(post, pars='nr')$summary
+ts.plot(data.frame(mu = dat$Case / dat$Pop, e = summary(post, pars='nr')$summary[, 'mean']))
+
+ts.plot(data.frame(e = 1 - summary(post, pars='p_under')$summary[, 'mean']))
 
 tab <- data.frame(rstan::extract(post, pars = c("prv0", "r_death_a", "r_death_tx", 
-                                                "r_sym", "r_aware0", "r_det0", "rr_det_t", "r_sc", "p_under", "ppv"))) %>% 
+                                                "r_sym", "r_aware", "r_det", "r_sc", "rt_report"))) %>% 
   as_tibble() %>% 
   bind_cols(exo) %>% 
   mutate(
@@ -83,9 +88,5 @@ tab <- data.frame(rstan::extract(post, pars = c("prv0", "r_death_a", "r_death_tx
     adr = dat$adr
   )
 
-tab %>% 
-  summarise(mean(rr_det_t ^ (2014 - Year0)))
-
-ts.plot(data.frame(mu = dat$Case / dat$Pop, e = summary(post, pars='nr')$summary[, 'mean']))
 
 write_csv(tab, file = here::here("results", "pars_IND.csv"))

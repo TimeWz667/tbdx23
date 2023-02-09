@@ -83,8 +83,8 @@ transformed parameters {
   
   for (i in 1:n_t) {
     inc[i] = inc0 * exp(- adr * (Years[i] - YearSurveyed));
-    r_aware[i] = r_aware0 * rr_det_t ^ (Years[i] - YearSurveyed);
-    r_det[i] = r_det0 * rr_det_t ^ (Years[i] - YearSurveyed);
+    r_aware[i] = r_aware0 * rr_det_t ^ ((Years[i] - YearSurveyed));
+    r_det[i] = r_det0 * rr_det_t ^ ((Years[i] - YearSurveyed));
     
     prv_t_a[i] = inc[i] / (r_sym + ra - adr);
     prv_t_s[i] = r_sym * prv_t_a[i] / (r_sym + rs - adr);
