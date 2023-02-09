@@ -13,3 +13,4 @@ stan/*.rds
 
 sim/__pycache__/*
 sim/*/__pycache__/*
+notebooks/*-checkpoint.ipynb

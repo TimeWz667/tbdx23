@@ -84,6 +84,9 @@ tab <- data.frame(rstan::extract(post, pars = c("prv0", "r_death_a", "r_death_tx
     adr = dat$adr
   )
 
+summary(post, pars='nr')$summary
+
+
 
 
 write_csv(tab, file = here::here("results", "pars_ZAF.csv"))

@@ -29,5 +29,5 @@ PCore dy {
 
         // Treatment
         dur_succ = 0.5
-        adr ~ unif(0, 0.1)
+        adr ~ unif(-0.1, 0.1)
 }

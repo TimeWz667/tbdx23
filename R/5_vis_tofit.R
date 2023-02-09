@@ -55,3 +55,14 @@ mss %>%
   facet_wrap(.~Index, scales = "free_y") +
   expand_limits(y = 0)
 
+
+
+mss %>% 
+  filter(Key == 6) %>% 
+  mutate(
+    r_det = DetR / PrevC,
+    AdrI = c(diff(log(IncR)), 0),
+    AdrP = c(diff(log(Prev)), 0),
+    AdrD = c(diff(log(DetR)), 0)
+  )
+

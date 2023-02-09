@@ -96,7 +96,7 @@ transformed parameters {
     
     prv[i] = prv_t_a[i] + prv_t_s[i] + prv_t_c[i];
     
-    tp[i] = prv_t_c[i] * r_det[i] / ppv;
+    tp[i] = prv_t_c[i] * r_det[i];
     nr[i] = tp[i] / ppv * (1 - p_under);
   }
 }

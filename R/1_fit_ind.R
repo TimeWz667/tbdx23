@@ -71,6 +71,7 @@ post <- rstan::sampling(m_cas, data = dat, iter = 5000, warmup = 4500)
 
 summary(post)$summary
 
+summary(post, pars='nr')$summary
 
 tab <- data.frame(rstan::extract(post, pars = c("prv0", "r_death_a", "r_death_tx", 
                                                 "r_sym", "r_aware0", "r_det0", "rr_det_t", "r_sc", "p_under", "ppv"))) %>% 
@@ -82,5 +83,9 @@ tab <- data.frame(rstan::extract(post, pars = c("prv0", "r_death_a", "r_death_tx
     adr = dat$adr
   )
 
+tab %>% 
+  summarise(mean(rr_det_t ^ (2014 - Year0)))
+
+ts.plot(data.frame(mu = dat$Case / dat$Pop, e = summary(post, pars='nr')$summary[, 'mean']))
 
 write_csv(tab, file = here::here("results", "pars_IND.csv"))
