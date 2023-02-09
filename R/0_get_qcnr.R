@@ -12,8 +12,8 @@ ind <- dat %>%
   pivot_longer(starts_with("m_")) %>% 
   extract(name, "month", "m_(\\d+)") %>% 
   mutate(
-    q = ceiling(as.numeric(month) / 4),
-    Time = Year + q / 4 + 1 / 8
+    q = ceiling(as.numeric(month) / 3),
+    Time = Year + (q - 1) / 4 + 1 / 8
   ) %>% 
   group_by(Country, iso, Time, Year, q) %>% 
   summarise(value = sum(value)) %>% 
@@ -27,7 +27,7 @@ zaf <- dat %>%
   extract(name, "q", "q_(\\d+)") %>% 
   mutate(
     q = as.numeric(q),
-    Time = Year + q / 4 + 1 / 8
+    Time = Year + (q - 1) / 4 + 1 / 8
   ) %>% 
   group_by(Country, iso, Time, Year, q) %>% 
   summarise(value = sum(value))
@@ -59,11 +59,11 @@ pop <- bind_rows(list(
 
 qcnr <- bind_rows(ind, zaf) %>% 
   left_join(pop) %>% 
-  mutate(QCNR = value / Pop)
+  mutate(QCNR = value / Pop, CNR = QCNR * 4)
 
-
-
-targets <- 
+qcnr %>% 
+  ggplot() +
+  geom_line(aes(x = Time, y = CNR, colour = iso))
 
 
 
