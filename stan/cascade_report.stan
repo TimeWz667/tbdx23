@@ -28,9 +28,6 @@ data {
   real<lower=0> r_death_s;
   real<lower=0> r_death_bg;
   real<lower=0, upper=1> p_tx_die;
-  
-  real<lower=0, upper=1> cap_report;
-  real<lower=0, upper=1> ppv;
 }
 parameters {
   real<lower=0> r_sym;
@@ -39,7 +36,10 @@ parameters {
   real<lower=0.1, upper = 0.3> r_sc;
   real<lower=0, upper=1> rr_die_a;
   
+  real<lower=0.5, upper=1> cap_report;
   real<lower=0> rt_report;
+  
+  real<lower=0.5, upper=0.85> ppv;
 }
 transformed parameters {
   vector<lower=0>[n_t] inc;
@@ -102,8 +102,6 @@ model {
   r_aware ~ inv_gamma(scale_dur, scale_dur);
   r_det ~ inv_gamma(scale_dur, scale_dur);
   r_sc ~ uniform(0.1, 0.3);
-
-  adr ~ uniform(-0.2, 0.2);
 
   target += binomial_lpmf(Asym | N, prv_a / Amp);
   target += binomial_lpmf(Sym | N, prv_s / Amp);

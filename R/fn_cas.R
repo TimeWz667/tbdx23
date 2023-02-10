@@ -77,8 +77,3 @@ calc_cascade <- function(df, sc = "baseline") {
     )
 }
 
-
-move_avg2 <- function(x) {
-  (x[-1] + x[-length(x)]) / 2
-}
-

@@ -12,14 +12,14 @@ data {
   
   int<lower=0> Pop[n_t]; // population size
   
-  real<lower=0> Inc_mu[n_t];
-  real<lower=0> Inc_sig[n_t];
+  real<lower=0> inc0;
+  real adr;
+  
   real<lower=0> Mor_mu[n_t];
   real<lower=0> Mor_sig[n_t];
   int<lower=0> Case[n_t]; // notification counts
 
-  real<lower=0> Amp_age[n_t];
-  real<lower=0> Amp_ep[n_t];
+  real<lower=0> Amp;
 
   // Prior knowledge
   real<lower=0> scale_dur;
@@ -30,18 +30,15 @@ data {
   real<lower=0, upper=1> p_tx_die;
 }
 parameters {
-  real<lower=0, upper=1> prv0;
-  real<lower=-0.2, upper=0.2> adr;
   real<lower=0> r_sym;
   real<lower=0> r_aware;
   real<lower=0> r_det;
   real<lower=0.1, upper = 0.3> r_sc;
   real<lower=0, upper=0.4> p_under;
   real<lower=0, upper=1> rr_die_a;
-  real<lower=0.5, upper=1> ppv;
+  real<lower=0.5, upper=0.85> ppv;
 }
 transformed parameters {
-  real<lower=0> inc0;
   vector<lower=0>[n_t] inc;
   
   real<lower=0> mor0;
@@ -53,18 +50,17 @@ transformed parameters {
   real<lower=0> ra;
   real<lower=0> rs;
   real<lower=0> rc;
-
-  real<lower=0> a0;
-  real<lower=0> c0;
   
-  real<lower=0, upper=1> pr_a;
-  real<lower=0, upper=1> pr_s;
-  real<lower=0, upper=1> pr_c;
   real<lower=0, upper=1> prv_a;
   real<lower=0, upper=1> prv_s;
   real<lower=0, upper=1> prv_c;
+  real<lower=0, upper=1> prv0;
+  
+  vector<lower=0>[n_t] prv;  
+  vector<lower=0>[n_t] prv_t_a;
+  vector<lower=0>[n_t] prv_t_s;
+  vector<lower=0>[n_t] prv_t_c;
 
-  vector<lower=0>[n_t] prv;
   vector<lower=0>[n_t] tp;
   vector<lower=0>[n_t] nr;
   
@@ -75,18 +71,10 @@ transformed parameters {
   rs = r_sc + r_death_s + r_death_bg;
   rc = r_sc + r_death_s + r_death_bg;
   
-  a0 = (rs + r_aware - adr) / r_sym;
-  c0 = r_aware / (rc + r_det - adr);
-    
-  pr_a = a0 / (a0 + 1 + c0);
-  pr_s = 1 / (a0 + 1 + c0);
-  pr_c = c0 / (a0 + 1 + c0);
-  
-  prv_a = prv0 * pr_a;
-  prv_s = prv0 * pr_s;
-  prv_c = prv0 * pr_c;
-  
-  inc0 = (ra + r_sym - adr) * prv_a;
+  prv_a = inc0 / (r_sym + ra - adr);
+  prv_s = prv_a * r_sym / (r_aware + rs - adr);
+  prv_c = prv_s * r_aware / (r_det + rc - adr);
+  prv0 = prv_a + prv_s + prv_c;
   
   mor0 = r_death_a * prv_a + r_death_s * (prv_s + prv_c) + r_death_tx * prv_c * r_det / (2 + r_death_tx - adr);
   
@@ -94,15 +82,16 @@ transformed parameters {
   for (i in 1:n_t) {
     inc[i] = inc0 * exp(- adr * (Years[i] - YearSurveyed));
     mor[i] = mor0 * exp(- adr * (Years[i] - YearSurveyed));
-    prv[i] = prv0 * exp(- adr * (Years[i] - YearSurveyed)) * (Amp_ep[i] / Amp_age[i]);
+    prv[i] = prv0 * exp(- adr * (Years[i] - YearSurveyed));
+    prv_t_a[i] = prv_a * exp(- adr * (Years[i] - YearSurveyed));
+    prv_t_s[i] = prv_s * exp(- adr * (Years[i] - YearSurveyed));
+    prv_t_c[i] = prv_c * exp(- adr * (Years[i] - YearSurveyed));
     
-    tp[i] = prv[i] * pr_c * r_det / ppv;
+    tp[i] = prv_t_c[i] * r_det;
     nr[i] = tp[i] / ppv * (1 - p_under);
   }
 }
 model {
-  prv0 ~ uniform(0, 1);
-
   r_sym ~ inv_gamma(scale_dur, scale_dur);
   r_aware ~ inv_gamma(scale_dur, scale_dur);
   r_det ~ inv_gamma(scale_dur, scale_dur);
@@ -118,7 +107,6 @@ model {
   
   for (i in 1:n_t) {
     target += poisson_lpmf(Case[i] | nr[i] * Pop[i]);
-    target += normal_lpdf(Inc_mu[i] | inc[i], Inc_sig[i]);
     target += normal_lpdf(Mor_mu[i] | mor[i], Mor_sig[i]);
   }
 }

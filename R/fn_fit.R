@@ -1,4 +1,10 @@
 
+
+move_avg2 <- function(x) {
+  (x[-1] + x[-length(x)]) / 2
+}
+
+
 r_prior <- function(iso = "IND") {
   list(
     p_primary = runif(1, 0.09, 0.14),

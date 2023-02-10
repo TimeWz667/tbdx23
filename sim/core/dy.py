@@ -258,7 +258,7 @@ class Model:
     def reform_ms(ms):
         ms = pd.DataFrame(ms).set_index('Time')
         ns = ms.N.rolling(2).mean()
-        ms = pd.DataFrame({
+        ms1 = pd.DataFrame({
             'IncR_apx': ms.IncR.rolling(2).mean().shift(-1),
             'MorR_apx': ms.MorR.rolling(2).mean().shift(-1),
             'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
@@ -275,9 +275,9 @@ class Model:
             'PrevS': ms.PrevS.rolling(2).mean().shift(-1),
             'PrevC': ms.PrevC.rolling(2).mean().shift(-1),
         }).iloc[:-1, ]
-        return ms
+        return ms1
 
-    def simulate_to_fit(self, p, t_eval=np.linspace(2014, 2020, 9)):
+    def simulate_to_fit(self, p, t_eval=np.linspace(2014, 2020, 7)):
         p = self.update_parameters(p) if 'sus' not in p else p
         y0 = self.get_y0(p)
 
@@ -361,7 +361,7 @@ if __name__ == '__main__':
 
     y0 = model.get_y0(pars)
 
-    ys, ms, _ = model.simulate_to_fit(pars, t_eval=np.linspace(2000, 2030, 41))
+    ys, ms, _ = model.simulate_to_fit(pars, t_eval=np.linspace(2000, 2030, 31))
 
     fig, axes = plt.subplots(2, 2)
 

@@ -5,7 +5,7 @@ theme_set(theme_bw())
 
 
 
-country = "IND"
+country = "ZAF"
 iso = glue::as_glue(country)
 
 
@@ -15,10 +15,11 @@ d2plot <- local({
   d_burden %>% 
     select(-Country)  %>% 
     mutate(
-      Inc_M = Inc_M * ifelse(iso == "IND", 1.2, 1),
-      Inc_L = Inc_L * ifelse(iso == "IND", 1.2, 1),
-      Inc_U = Inc_U * ifelse(iso == "IND", 1.2, 1)
+      Inc_M = Inc_M,
+      Inc_L = Inc_L,
+      Inc_U = Inc_U
     )%>% 
+    filter(Year >= 2014) %>% 
     pivot_longer(- Year) %>% 
     separate(name, c("Index", "name")) %>% 
     pivot_wider() %>% 
@@ -78,9 +79,9 @@ mss1 %>%
 
 bind_rows(
   mss0 %>% filter(Time <= 2020),
-  mss1
+  mss1 %>% mutate(CNR = CNR * 4)
 ) %>% 
-  select(Year = Time, CNR = CNR_apx, Key) %>% 
+  select(Year = Time, CNR = CNR, Key) %>% 
   pivot_longer(c(CNR), names_to = "Index") %>% 
   group_by(Year, Index) %>% 
   summarise(

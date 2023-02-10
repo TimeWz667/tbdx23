@@ -33,10 +33,10 @@ class Objective(AbsObjectiveSimBased):
 
         tar = self.Targets
 
-        # dist = ((ms.IncR - tar.IncR_mu) ** 2 / tar.IncR_eps).sum()
-        # dist += ((ms.MorR - tar.MorR_mu) ** 2 / tar.MorR_eps).sum()
-        # dist += ((ms.CNR - tar.CNR_mu) ** 2 / tar.CNR_eps).sum()
-        dist = ((ms.IncR / tar.IncR_mu - 1) ** 2).sum()
+        dist = ((ms.IncR - tar.IncR_mu) ** 2 / tar.IncR_eps).sum()
+        dist += ((ms.MorR - tar.MorR_mu) ** 2 / tar.MorR_eps).sum()
+        dist += ((ms.CNR - tar.CNR_mu) ** 2 / tar.CNR_eps).sum()
+        # dist = ((ms.IncR / tar.IncR_mu - 1) ** 2).sum()
         # dist += ((ms.MorR / tar.MorR_mu - 1) ** 2).sum()
         # dist += ((ms.CNR / tar.CNR_mu - 1) ** 2).sum()
         return - dist

@@ -18,7 +18,25 @@ scs <- c(
 )
 
 
+tar <- read_csv(here::here("data", "pars", iso, "targets.csv"))
 
+
+d2plot <- local({
+  load("data/" + iso + "/d_burden.rdata")
+  
+  d_burden %>% 
+    select(-Country)  %>% 
+    mutate(
+      Inc_M = Inc_M,
+      Inc_L = Inc_L,
+      Inc_U = Inc_U
+    )%>% 
+    filter(Year >= 2014) %>% 
+    pivot_longer(- Year) %>% 
+    separate(name, c("Index", "name")) %>% 
+    pivot_wider() %>% 
+    mutate(Index = paste0(Index, "R"))
+})
 
 mss0 <- read_csv(here::here("results", "I_" + iso, "RunBaseline.csv"))
 mss1 <- read_csv(here::here("results", "I_" + iso, "RunIntv.csv"))
@@ -75,10 +93,13 @@ avt <- avt %>%
 
 
 g_intv <- mss %>% 
-  filter(Time > 2018) %>% 
+  #filter(Time > 2018) %>% 
   ggplot() +
   #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
+  geom_pointrange(data = d2plot, aes(x = Year, y = M, ymin = L, ymax = U)) + 
+  geom_point(data = tar %>% select(Year, CNR = CNR_mu) %>% mutate(Index = "CNR"), 
+             aes(x = Year, y = CNR)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   scale_color_discrete(labels = scs) +
   expand_limits(y = 0) +
@@ -109,7 +130,10 @@ ggsave(g_avt, filename = here::here("results", "figs", "g_avt_ind.png"), width =
 
 
 
-
+mss0 %>% 
+  group_by(Key, Scenario) %>% 
+  summarise(adr = mean(diff(log(IncR)))) %>% 
+  pull(adr) %>% hist()
 
 
 
