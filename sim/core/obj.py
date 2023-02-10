@@ -37,9 +37,8 @@ class Objective(AbsObjectiveSimBased):
         # dist += ((ms.MorR - tar.MorR_mu) ** 2 / tar.MorR_eps).sum()
         # dist += ((ms.CNR - tar.CNR_mu) ** 2 / tar.CNR_eps).sum()
         dist = ((ms.IncR / tar.IncR_mu - 1) ** 2).sum()
-        dist += ((ms.MorR / tar.MorR_mu - 1) ** 2).sum()
+        # dist += ((ms.MorR / tar.MorR_mu - 1) ** 2).sum()
         # dist += ((ms.CNR / tar.CNR_mu - 1) ** 2).sum()
-
         return - dist
 
 
@@ -48,7 +47,7 @@ def load_objective(folder_inputs, file_cs, exo=None):
     repo_cs = RepoCascade(pars_cs)
 
     inp = load_inputs(folder_inputs)
-    print(inp)
+
     m = Model(inp)
 
     with open(f'{folder_inputs}/prior.txt', 'r') as f:

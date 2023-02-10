@@ -13,35 +13,33 @@ class Cascade:
         self.Prev = self.calc_prev()
 
         self.R_Onset = src['r_sym']
-        self.R_CSI = src['r_aware0']
-        self.Det = src['r_det0'] * self.Prev['ExCS']
+        self.R_CSI = src['r_aware']
+        self.Det = src['r_det'] * self.Prev['ExCS']
 
         self.R_SelfCure = src['r_sc']
         self.R_Death_A = src['r_death_a']
         self.R_Death_S = src['r_death_s']
 
-        self.R_ReCSI = src['r_det0']
+        self.R_ReCSI = src['r_det']
 
-        self.RR_Det_t = src['rr_det_t']
         self.PrDx0 = 0
         self.PrDx1 = 1
 
-        self.PrUnder = src['p_under']
+        # self.PrUnder = src['p_under']
         self.PPV = src['ppv']
+        self.CapReport = src['cap_report']
+        self.RtReport = src['rt_report']
 
-    def calc_k_det(self, t):
-        if t >= self.Year0:
-            return np.power(self.RR_Det_t, t - self.YearSurveyed)
-        else:
-            return np.power(self.RR_Det_t, self.Year0 - self.YearSurveyed)
+    def PrReport(self, t):
+        return (1 - self.CapReport) + self.CapReport / (1 + np.exp(- self.RtReport * (max(t, 2010) - 2020)))
 
     def calc_prev(self):
         src = self.Source
         adr = src['adr']
         r_sc, r_death_a, r_death_s, r_death_bg = src['r_sc'], src['r_death_a'], src['r_death_s'], src['r_death_bg']
         r_sym = src['r_sym']
-        r_aware = src['r_aware0'] * np.power(src['rr_det_t'], self.Year0 - src['Year0'])
-        r_det = src['r_det0'] * np.power(src['rr_det_t'], self.Year0 - src['Year0'])
+        r_aware = src['r_aware']
+        r_det = src['r_det']
 
         inc = src['inc0'] * np.exp(- src['adr'] * (self.Year0 - src['Year0']))
 
@@ -93,4 +91,4 @@ if __name__ == '__main__':
     print(cas)
 
     for t in [2005, 2010, 2015, 2020, 2025]:
-        print(t, ': ', cas.calc_k_det(t))
+        print(t, ': ', cas.PrReport(t))

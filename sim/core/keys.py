@@ -24,5 +24,6 @@ A_IncRecent = 1
 A_IncRemote = 2
 A_Mor = 3
 A_Det = 4
+A_Noti = 5
 
-N_Aux = 5
+N_Aux = 6

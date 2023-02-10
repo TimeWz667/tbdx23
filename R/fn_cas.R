@@ -8,9 +8,6 @@ calc_prev <- function(df) {
       rs = r_sc + r_death_s + r_death_bg,
       rc = r_sc + r_death_s + r_death_bg,
       
-      r_aware = r_aware0 * rr_det_t ^ (2023 - Year0),
-      r_det = r_det0 * rr_det_t ^ (2023 - Year0),
-      
       prv_a = inc / (r_sym + ra - adr),
       prv_s = prv_a * r_sym / (r_aware + rs - adr),
       prv_c = prv_s * r_aware / (r_det + rc - adr),
@@ -75,7 +72,7 @@ calc_cascade <- function(df, sc = "baseline") {
       
       Pr_Det = r_sym * dur_a * pd0,
       Pr_Det = Pr_Det + r_sym * dur_a * (r_csi * (1 - pdx0) * dur_s) * pd1,
-      Pr_Notif = Pr_Det * (1 - p_under),
+      Pr_Notif = Pr_Det * cap_report,
       Scenario = sc
     )
 }

@@ -134,11 +134,25 @@ class Model:
     def calc_cascade(self, t, y, pars, dy, da, calc):
         cas = pars['cas']
 
-        k = cas.calc_k_det(t)
+        if 2020 <= t <= 2022:
+            try:
+                k_covid = pars['k_covid']
+            except KeyError:
+                k_covid = 1
+        else:
+            k_covid = 1
 
-        r_det_s = k * cas.R_CSI * cas.PrDx0
-        r_fn_s = k * cas.R_CSI * (1 - cas.PrDx0)
-        r_det_c = k * cas.R_ReCSI * cas.PrDx1
+        pdx0, pdx1 = cas.PrDx0, cas.PrDx1
+        r_csi, r_recsi = cas.R_CSI, cas.R_ReCSI
+
+        if t > 2023 and 'intv' in pars:
+            intv = pars['intv']
+            pdx0, pdx1 = intv['pdx0'], intv['pdx1']
+            r_csi, r_recsi = intv['r_csi'], intv['r_recsi']
+
+        r_det_s = k_covid * r_csi * pdx0
+        r_fn_s = k_covid * r_csi * (1 - pdx0)
+        r_det_c = k_covid * r_recsi * pdx1
 
         trs = [
             (I.Sym, I.Tx, r_det_s, 'det'),
@@ -153,6 +167,7 @@ class Model:
             dy[:, i] += calc_dy(y[:, i], trs)
             calc['det'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'det')
         da[I.A_Det] += calc['det']
+        da[I.A_Noti] += calc['det'] * cas.PrReport(t) / cas.PPV
 
     def __call__(self, t, y, pars):
         y, aux = y[:- I.N_Aux], y[- I.N_Aux:]
@@ -189,7 +204,6 @@ class Model:
         mor = (calc['deaths_tb'] + calc['deaths'])[I.PTB].sum()
 
         cas = pars['cas']
-
         mea = {
             'Time': t,
             'N': n,
@@ -201,13 +215,13 @@ class Model:
             'MorR': mor / n,
             'LTBI': y[I.LTBI].sum() / n,
             'DetR': calc['det'] / n,
-            'CNR': calc['det'] / n * (1 - cas.PrUnder) / cas.PPV,
+            'CNR': calc['det'] / n * (cas.PrReport(t) / cas.PPV),
             'CumInc': aux[I.A_Inc],
             'CumIncRecent': aux[I.A_IncRecent],
             'CumIncRemote': aux[I.A_IncRemote],
             'CumMor': aux[I.A_Mor],
             'CumDet': aux[I.A_Det],
-            'CumNoti': aux[I.A_Det] * (1 - pars['cas'].PrUnder)
+            'CumNoti': aux[I.A_Noti]
         }
         return mea
 
@@ -240,6 +254,7 @@ class Model:
         ms = pd.DataFrame({
             'IncR_apx': ms.IncR.rolling(2).mean().shift(-1),
             'MorR_apx': ms.MorR.rolling(2).mean().shift(-1),
+            'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
             'IncR': (ms.CumInc.diff() / ns).shift(-1),
             'MorR': (ms.CumMor.diff() / ns).shift(-1),
             'DetR': (ms.CumDet.diff() / ns).shift(-1),
@@ -253,7 +268,7 @@ class Model:
         }).iloc[:-1, ]
         return ms
 
-    def simulate_to_fit(self, p, t_eval=np.linspace(2014, 2022, 9)):
+    def simulate_to_fit(self, p, t_eval=np.linspace(2014, 2020, 9)):
         p = self.update_parameters(p) if 'sus' not in p else p
         y0 = self.get_y0(p)
 
@@ -262,6 +277,26 @@ class Model:
         except ValueError:
             return None, None, {'succ': False}
 
+        return ys, ms, {'succ': True}
+
+    def simulate_to_preCOVID(self, p, t_end=2020):
+        p = self.update_parameters(p) if 'sus' not in p else p
+        y0 = self.get_y0(p)
+
+        try:
+            ys, ms = self.__sim(p, y0, self.Year0 - 300, t_end)
+        except ValueError:
+            return None, None, {'succ': False}
+        return ys, ms, {'succ': True}
+
+    def simulate_to_postCOVID(self, p, ys0, t_eval=np.linspace(2020, 2023, 13)):
+        p = self.update_parameters(p) if 'sus' not in p else p
+        t0, y0 = ys0.t[-1], ys0.y[:, -1]
+
+        try:
+            ys, ms = self.__sim(p, y0, t0, max(t_eval), t_eval)
+        except ValueError:
+            return None, None, {'succ': False}
         return ys, ms, {'succ': True}
 
     def simulate_to_baseline(self, p):
@@ -275,18 +310,19 @@ class Model:
         except ValueError:
             return None, {'succ': False}
 
-        return ys.y[:, -1], {'succ': True, 't0': t0, 't1': t1}
+        return ys, {'succ': True, 't0': t0, 't1': t1}
 
-    def simulate_onward(self, y0, p, t_end=2036, dt=0.5):
-        t_out = np.linspace(self.YearBaseline, t_end, int((t_end - self.YearBaseline) / dt) + 1)
+    def simulate_onward(self, p, ys0, t_end=2036, dt=1):
+        t_eval = np.linspace(self.YearBaseline, t_end, int((t_end - self.YearBaseline) / dt) + 1)
+        p = self.update_parameters(p) if 'sus' not in p else p
+        t0, y0, t1 = ys0.t[-1], ys0.y[:, -1], max(t_eval)
 
         try:
-            ys, ms = self.__sim(p, y0, self.YearBaseline, t_end, t_out)
+            ys, ms = self.__sim(p, y0, t0, t1, t_eval)
         except ValueError:
             return None, None, {'succ': False}
 
-        ms = pd.DataFrame(ms).set_index('Time')
-        return ys, ms, {'succ': True, 't0': self.YearBaseline}
+        return ys, ms, {'succ': True, 't0': t0}
 
 
 if __name__ == '__main__':
@@ -305,9 +341,9 @@ if __name__ == '__main__':
     repo_cs = RepoCascade(pars_cs, 2010)
 
     pars = dict(sample(r_prior))
-    pars['beta'] = 5
+    pars['beta'] = 6.9
     pars['rr_inf_asym'] = 1
-    pars['adr'] = - 0.01
+    pars['adr'] = 0.005
     pars['cas'] = repo_cs.sample()
 
     inp = load_inputs('../../data/pars/IND')
@@ -316,9 +352,7 @@ if __name__ == '__main__':
 
     y0 = model.get_y0(pars)
 
-    ys, ms, _ = model.simulate_to_fit(pars, t_eval=np.linspace(1990, 2030, 41))
-
-    print(ms)
+    ys, ms, _ = model.simulate_to_fit(pars, t_eval=np.linspace(2000, 2030, 41))
 
     fig, axes = plt.subplots(2, 2)
 
@@ -327,7 +361,8 @@ if __name__ == '__main__':
     ms.PrevS.plot(ax=axes[0, 0])
     ms.PrevC.plot(ax=axes[0, 0])
     axes[0, 0].set_title('Prevalence')
-    ms.CNR.plot(ax=axes[0, 1])
+    ms.CNR_apx.plot(ax=axes[0, 1])
+    ms.DetR.plot(ax=axes[0, 1])
     axes[0, 1].set_title('CNR')
     ms.IncR.plot(ax=axes[1, 0])
     axes[1, 0].set_title('Incidence')
@@ -336,6 +371,3 @@ if __name__ == '__main__':
 
     fig.tight_layout()
     plt.show()
-
-    inc = ms.IncR[ms.index > 2010]
-    print(- np.diff(np.log(inc)))
