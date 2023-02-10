@@ -30,9 +30,6 @@ tar <- read_csv(here::here("data", "pars", iso, "targets.csv"))
 tarq  <- read_csv(here::here("data", "pars", iso, "targets_q.csv"))
 
 
-tarq %>% mutate(CNR = QCNR * 4, Index = "CNR") %>% 
-  select()
-
 
 mss0 <- read_csv(here::here("results", "A_" + iso, "RunPost.csv"))
 mss1 <- read_csv(here::here("results", "B_" + iso, "RunPost.csv")) 

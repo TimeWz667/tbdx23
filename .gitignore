@@ -15,3 +15,4 @@ sim/__pycache__/*
 sim/*/__pycache__/*
 notebooks/*-checkpoint.ipynb
 /notebooks/.ipynb_checkpoints/*
+data/AIDS/

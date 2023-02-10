@@ -9,6 +9,10 @@ __author__ = 'Chu-Chang Ku'
 __all__ = ['Model']
 
 
+def blend(x0, x1, wt):
+    return x0 + wt * (x1 - x0)
+
+
 class Model:
     def __init__(self, inputs):
         self.Inputs = inputs
@@ -146,9 +150,12 @@ class Model:
         r_csi, r_recsi = cas.R_CSI, cas.R_ReCSI
 
         if t > 2023 and 'intv' in pars:
+            wt = (t - 2023) / (2026 - 2023) if t < 2026 else 1
             intv = pars['intv']
-            pdx0, pdx1 = intv['pdx0'], intv['pdx1']
-            r_csi, r_recsi = intv['r_csi'], intv['r_recsi']
+            pdx0 = blend(pdx0, intv['pdx0'], wt)
+            pdx1 = blend(pdx1, intv['pdx1'], wt)
+            r_csi = blend(r_csi, intv['r_csi'], wt)
+            r_recsi = blend(r_recsi, intv['r_recsi'], wt)
 
         r_det_s = k_covid * r_csi * pdx0
         r_fn_s = k_covid * r_csi * (1 - pdx0)
@@ -255,6 +262,8 @@ class Model:
             'IncR_apx': ms.IncR.rolling(2).mean().shift(-1),
             'MorR_apx': ms.MorR.rolling(2).mean().shift(-1),
             'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
+            'CumInc': ms.CumInc.rolling(2).mean().shift(-1),
+            'CumMor': ms.CumMor.rolling(2).mean().shift(-1),
             'IncR': (ms.CumInc.diff() / ns).shift(-1),
             'MorR': (ms.CumMor.diff() / ns).shift(-1),
             'DetR': (ms.CumDet.diff() / ns).shift(-1),
