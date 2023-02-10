@@ -9,6 +9,15 @@ country = "IND"
 iso = glue::as_glue(country)
 
 
+scs <- c(
+  Baseline = "Baseline",
+  Pub90 = "90% dx in publice",
+  PubEng90 = "90% dx in public and engaged private",
+  RedDelay2 = "0.5% care-seeking delays",
+  ACF2 = "2 times per year ACF reached"
+)
+
+
 
 
 mss0 <- read_csv(here::here("results", "I_" + iso, "RunBaseline.csv"))
@@ -23,6 +32,10 @@ mss = bind_rows(mss0, mss1) %>%
     M = median(value),
     L = quantile(value, 0.25),
     U = quantile(value, 0.75)
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    Scenario = factor(Scenario, names(scs))
   )
 
 
@@ -53,27 +66,53 @@ avt <- avt %>%
     M = median(value),
     L = quantile(value, 0.25),
     U = quantile(value, 0.75)
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    Scenario = factor(Scenario, names(scs))
   )
 
 
 
-mss %>% 
+g_intv <- mss %>% 
+  filter(Time > 2018) %>% 
   ggplot() +
   #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
-  facet_wrap(Index~., scales = "free_y", nrow=3) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
-  expand_limits(y = 0)
+  scale_color_discrete(labels = scs) +
+  expand_limits(y = 0) +
+  facet_wrap(Index~., scales = "free_y",  
+             labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
+  theme(legend.position = "bottom", legend.direction = "vertical")
 
 
-avt %>% 
+g_intv
+
+
+g_avt <- avt %>% 
   ggplot() +
   #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
-  facet_wrap(Index~., scales = "free_y", nrow=3) +
-  scale_y_continuous("%", labels = scales::percent_format()) + 
-  expand_limits(y = 0)
-  
+  scale_y_continuous("%", labels = scales::percent_format()) +
+  scale_color_discrete(labels = scs) +
+  facet_wrap(Index~., scales = "free_y", labeller = labeller(Index=c(AvtInc = "Incidence", AvtMor = "Mortality"))) +
+  expand_limits(y = 0) +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+
+g_avt  
+
+
+
+ggsave(g_intv, filename = here::here("results", "figs", "g_intv_ind.png"), width = 8, height = 4.5)
+ggsave(g_avt, filename = here::here("results", "figs", "g_avt_ind.png"), width = 6, height = 4.5)
+
+
+
+
+
+
+
 
 
 
