@@ -25,5 +25,6 @@ A_IncRemote = 2
 A_Mor = 3
 A_Det = 4
 A_Noti = 5
+A_ACF = 6
 
-N_Aux = 6
+N_Aux = 7

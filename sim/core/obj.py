@@ -59,7 +59,7 @@ def load_objective(folder_inputs, file_cs, exo=None):
 
 
 if __name__ == '__main__':
-    obj = load_objective('../../data/pars/IND', '../../results/pars_IND.csv')
+    obj = load_objective('../../data/pars/ZAF', '../../results/pars_ZAF.csv')
 
     for do in obj.Domain:
         print(do)

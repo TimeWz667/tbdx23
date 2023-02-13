@@ -5,7 +5,7 @@ theme_set(theme_bw())
 
 
 
-country = "ZAF"
+country = "IND"
 iso = glue::as_glue(country)
 
 

@@ -29,9 +29,10 @@ class Cascade:
         self.PPV = src['ppv']
         self.CapReport = src['cap_report']
         self.RtReport = src['rt_report']
+        self.Report0 = src['report0']
 
     def PrReport(self, t):
-        return (1 - self.CapReport) + self.CapReport / (1 + np.exp(- self.RtReport * (max(t, 2010) - 2020)))
+        return (self.Report0 + (self.CapReport - self.Report0) / (1 + np.exp(- self.RtReport * (max(t, 2010) - 2020))))
 
     def calc_prev(self):
         src = self.Source

@@ -2,9 +2,10 @@ from scipy.interpolate import interp1d
 from functools import lru_cache
 from collections import namedtuple
 import json
+import pandas as pd
 
 __author__ = 'Chu-Chang Ku'
-__all__ = ['load_inputs']
+__all__ = ['load_inputs', 'load_k_covid']
 
 
 Inputs = namedtuple("Inputs", ('Demography', 'TxOut', 'TxOutHIV'))
@@ -47,6 +48,11 @@ class TxOut:
         return f'Successful: {self.PrTxSucc:.0%}, LTFU: {self.PrTxLTFU:.0%}, Die: {self.PrTxDie:.0%}'
 
 
+def load_k_covid(filepath):
+    df = pd.read_csv(filepath)
+    return interp1d(df.Time, df.k_covid, kind='nearest', bounds_error=False, fill_value=1)
+
+
 def load_inputs(root):
     with open(f'{root}/pars_pop.json', 'r') as f:
         src = json.load(f)
@@ -70,8 +76,6 @@ def load_inputs(root):
 
 
 if __name__ == '__main__':
-    import json
-
     with open('../../data/pars/IND/pars_pop.json', 'r') as f:
         src = json.load(f)
 

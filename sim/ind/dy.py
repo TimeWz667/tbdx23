@@ -4,14 +4,16 @@ __author__ = 'Chu-Chang Ku'
 __all__ = ['ModelIND', 'get_intv']
 
 
-def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0):
+def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, ppm=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0):
     cas = p['cas']
 
     pdx_pub = p['p_dx_pub']
     entry_pub = p['p_cs_pub']
     pdx_all = cas.PrDx0
     pdx_pri = (pdx_all - pdx_pub * entry_pub) / (1 - entry_pub)
-    ppm = 1 - (1 - cas.PrReport(2024)) * pdx_all / (1 - entry_pub) / pdx_pri
+    ppm0 = 1 - (1 - cas.PrReport(2024)) * pdx_all / (1 - entry_pub) / pdx_pri
+    ppm0 = max(ppm0, 0)
+    ppm = max(ppm, ppm0) if ppm is not None else ppm0
 
     pdx0_pub = pdx_pub if pdx0_pub is None else pdx0_pub
     pdx0_eng = pdx_pri if pdx0_eng is None else pdx0_eng
@@ -21,11 +23,15 @@ def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, rr_c
     pdx1_eng = pdx_pri if pdx1_eng is None else pdx1_eng
     pdx1 = entry_pub * pdx1_pub + (1 - entry_pub) * ppm * pdx1_eng + (1 - entry_pub) * (1 - ppm) * pdx_pri
 
+    r_csi1 = rr_csi * cas.R_CSI + rd_csi
+    r_recsi1 = rr_recsi * cas.R_ReCSI + rd_recsi
+
     return {
         'pdx0': pdx0,
         'pdx1': pdx1,
-        'r_csi': rr_csi * cas.R_CSI + rd_csi,
-        'r_recsi': rr_recsi * cas.R_ReCSI + rd_recsi
+        'r_csi_acf': r_csi1 - cas.R_CSI,
+        'r_recsi_acf': r_recsi1 - cas.R_ReCSI,
+        'ppm': ppm
     }
 
 

@@ -28,6 +28,8 @@ data {
   real<lower=0> r_death_s;
   real<lower=0> r_death_bg;
   real<lower=0, upper=1> p_tx_die;
+  
+  real<lower=0.5, upper=1> cap_report;
 }
 parameters {
   real<lower=0> r_sym;
@@ -36,7 +38,7 @@ parameters {
   real<lower=0.1, upper = 0.3> r_sc;
   real<lower=0, upper=1> rr_die_a;
   
-  real<lower=0.5, upper=1> cap_report;
+  real<lower=0, upper=0.5> report0;
   real<lower=0> rt_report;
   
   real<lower=0.5, upper=0.85> ppv;
@@ -84,7 +86,7 @@ transformed parameters {
   
   
   for (i in 1:n_t) {
-    p_under[i] = cap_report * (1 - 1 / (1 + exp(- rt_report * (Years[i] - 2020))));
+    p_under[i] = 1 - (report0 + (cap_report - report0) / (1 + exp(- rt_report * (Years[i] - 2020))));
     
     inc[i] = inc0 * exp(- adr * (Years[i] - YearSurveyed));
     mor[i] = mor0 * exp(- adr * (Years[i] - YearSurveyed));

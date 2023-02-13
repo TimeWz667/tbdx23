@@ -53,6 +53,9 @@ class Model:
         pars['r_tl'] = r_ts * to.PrTxLTFU / to.PrTxSucc
         pars['r_death_tx'] = r_ts * to.PrTxDie / to.PrTxSucc
 
+        if 'k_covid' not in pars:
+            pars['k_covid'] = lambda t: 1
+
         return pars
 
     def calc_demography(self, t, y, pars, dy, da, calc):
@@ -80,11 +83,19 @@ class Model:
         da[I.A_Mor] += (deaths + deaths_tb)[I.PTB].sum()
 
     def calc_transmission(self, t, y, pars, dy, da, calc):
-        if t > self.Year0:
-            adr = pars['adr']
-            adj = np.exp(- adr * (t - self.Year0))
-        else:
+        adr = pars['adr']
+        if t < self.Year0:
             adj = 1
+        else:
+            adj = np.exp(- adr * (t - self.Year0))
+        # elif t < 2026:
+        #     adj = np.exp(- adr * (2023 - self.Year0))
+        #     wt = 0.5 * blend(1, 0.5, (t - 2023) / (2026 - 2023))
+        #     adj *= np.exp(- adr * wt)
+        # else:
+        #     adj = np.exp(- adr * (2023 - self.Year0))
+        #     adj *= np.exp(- adr * np.exp(- adr * (2026 - 2023)))
+        #     adj *= np.exp(- adr / 2 * (t - 2026))
 
         foi = adj * pars['beta'] * (pars['trans'] * y).sum() / calc['n']
 
@@ -138,12 +149,9 @@ class Model:
     def calc_cascade(self, t, y, pars, dy, da, calc):
         cas = pars['cas']
 
-        if 2020 <= t <= 2022:
-            try:
-                k_covid = pars['k_covid']
-            except KeyError:
-                k_covid = 1
-        else:
+        try:
+            k_covid = pars['k_covid'](t)
+        except KeyError:
             k_covid = 1
 
         pdx0, pdx1 = cas.PrDx0, cas.PrDx1
@@ -154,8 +162,11 @@ class Model:
             intv = pars['intv']
             pdx0 = blend(pdx0, intv['pdx0'], wt)
             pdx1 = blend(pdx1, intv['pdx1'], wt)
-            r_csi = blend(r_csi, intv['r_csi'], wt)
-            r_recsi = blend(r_recsi, intv['r_recsi'], wt)
+            r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pars['p_dx_pub']
+            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pars['p_dx_pub']
+        else:
+            r_csi_acf = 0
+            r_recsi_acf = 0
 
         r_det_s = k_covid * r_csi * pdx0
         r_fn_s = k_covid * r_csi * (1 - pdx0)
@@ -165,15 +176,21 @@ class Model:
             (I.Sym, I.Tx, r_det_s, 'det'),
             (I.Sym, I.ExCS, r_fn_s, 'fn'),
             (I.ExCS, I.Tx, r_det_c, 'det'),
+            (I.Sym, I.Tx, r_csi_acf, 'acf'),
+            (I.ExCS, I.Tx, r_recsi_acf, 'acf'),
             (I.Tx, I.RLow, pars['r_ts'], 'txs'),
             (I.Tx, I.RHigh, pars['r_tl'], 'txl'),
         ]
 
         calc['det'] = 0
+        calc['acf'] = 0
         for i in range(I.N_Strata):
             dy[:, i] += calc_dy(y[:, i], trs)
             calc['det'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'det')
+            calc['acf'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'acf')
+
         da[I.A_Det] += calc['det']
+        da[I.A_ACF] += calc['acf']
         da[I.A_Noti] += calc['det'] * cas.PrReport(t) / cas.PPV
 
     def __call__(self, t, y, pars):
@@ -228,7 +245,8 @@ class Model:
             'CumIncRemote': aux[I.A_IncRemote],
             'CumMor': aux[I.A_Mor],
             'CumDet': aux[I.A_Det],
-            'CumNoti': aux[I.A_Noti]
+            'CumNoti': aux[I.A_Noti],
+            'CumACF': aux[I.A_ACF]
         }
         return mea
 
@@ -264,6 +282,7 @@ class Model:
             'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
             'CumInc': ms.CumInc.rolling(2).mean().shift(-1),
             'CumMor': ms.CumMor.rolling(2).mean().shift(-1),
+            'CumACF': ms.CumACF.rolling(2).mean().shift(-1),
             'IncR': (ms.CumInc.diff() / ns).shift(-1),
             'MorR': (ms.CumMor.diff() / ns).shift(-1),
             'DetR': (ms.CumDet.diff() / ns).shift(-1),

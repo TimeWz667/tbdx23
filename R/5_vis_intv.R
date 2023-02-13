@@ -11,10 +11,12 @@ iso = glue::as_glue(country)
 
 scs <- c(
   Baseline = "Baseline",
-  Pub90 = "90% dx in publice",
-  PubEng90 = "90% dx in public and engaged private",
-  RedDelay2 = "0.5% care-seeking delays",
-  ACF2 = "2 times per year ACF reached"
+  Dx90 = "90% dx in public and engaged private",
+  PPM90 = "90% PPM",
+  #"Dx+PPM90" = "90% dx and 90% PPM",
+  RedDelay2 = "half care-seeking delays",
+  ACF2 = "2 times per year ACF reached (~ 500k per year cases)",
+  PPM90_RedDelay2 = "half delays and 90% PPM"
 )
 
 
@@ -55,6 +57,22 @@ mss = bind_rows(mss0, mss1) %>%
   mutate(
     Scenario = factor(Scenario, names(scs))
   )
+
+
+mss1 %>% 
+  filter(Scenario == "ACF2") %>% 
+  select(Time, CumACF, Key) %>% 
+  filter(Time %in% c(2030, 2035)) %>% 
+  group_by(Time) %>% 
+  summarise(
+    M = median(CumACF),
+    L = quantile(CumACF, 0.25),
+    U = quantile(CumACF, 0.75)
+  ) %>% 
+  mutate(
+    across(c(M, L, U), function(x) x / (Time - 2023))
+  )
+
 
 
 avt <- mss1 %>% 
@@ -101,6 +119,7 @@ g_intv <- mss %>%
   geom_point(data = tar %>% select(Year, CNR = CNR_mu) %>% mutate(Index = "CNR"), 
              aes(x = Year, y = CNR)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
   scale_color_discrete(labels = scs) +
   expand_limits(y = 0) +
   facet_wrap(Index~., scales = "free_y",  
@@ -111,11 +130,29 @@ g_intv <- mss %>%
 g_intv
 
 
+g_intv0 <- mss %>% 
+  filter(Index %in% c("IncR", "MorR")) %>% 
+  filter(Time > 2021) %>% 
+  ggplot() +
+  geom_line(aes(x = Time, y = M, colour = Scenario)) +
+  scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
+  scale_color_discrete(labels = scs) +
+  expand_limits(y = 0) +
+  facet_wrap(Index~., scales = "free_y",  
+             labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
+  theme(legend.position = "bottom", legend.direction = "vertical")
+
+
+g_intv0
+
+
 g_avt <- avt %>% 
   ggplot() +
   #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("%", labels = scales::percent_format()) +
+  scale_x_continuous("Year", breaks = c(2023, 2025, 2030, 2035)) +
   scale_color_discrete(labels = scs) +
   facet_wrap(Index~., scales = "free_y", labeller = labeller(Index=c(AvtInc = "Incidence", AvtMor = "Mortality"))) +
   expand_limits(y = 0) +
@@ -126,18 +163,5 @@ g_avt
 
 
 ggsave(g_intv, filename = here::here("results", "figs", "g_intv_ind.png"), width = 8, height = 4.5)
+ggsave(g_intv0, filename = here::here("results", "figs", "g_intv0_ind.png"), width = 6, height = 4.5)
 ggsave(g_avt, filename = here::here("results", "figs", "g_avt_ind.png"), width = 6, height = 4.5)
-
-
-
-mss0 %>% 
-  group_by(Key, Scenario) %>% 
-  summarise(adr = mean(diff(log(IncR)))) %>% 
-  pull(adr) %>% hist()
-
-
-
-
-
-
-

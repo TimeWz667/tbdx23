@@ -10,7 +10,7 @@ PCore dy {
 
         // Life history
         r_lat = 0.5
-        p_primary = 0.14  # probability of primary progression
+        p_primary ~ unif(0.09, 0.14)   # probability of primary progression
         r_act = r_lat * p_primary / (1 - p_primary)
 
         r_clear ~ unif(0.02, 0.04)
@@ -21,11 +21,6 @@ PCore dy {
         r_relapse = 0.001  # relapse after stabilisation,
         r_relapse_td = 0.008  # relapse after treatment default,
         r_relapse_tc = 0.004  # relapse after treatment completion
-
-        // Care-seeking and diagnosis
-        p_cs_pub = 0.483
-        p_dx_pub = 0.65
-        p_dx_pri = 0.27
 
         // Treatment
         dur_succ = 0.5
