@@ -11,12 +11,14 @@ iso = glue::as_glue(country)
 
 scs <- c(
   Baseline = "Baseline",
-  Dx90 = "90% dx in public and engaged private",
-  PPM90 = "90% PPM",
+  Dx90 = "Increased diagnostic uptake in healthcare settings",
+  PPM90 = "Increased diagnostic uptake, with PPM",
   #"Dx+PPM90" = "90% dx and 90% PPM",
   RedDelay2 = "half care-seeking delays",
-  ACF2 = "2 times per year ACF reached (~ 500k per year cases)",
-  PPM90_RedDelay2 = "half delays and 90% PPM"
+  ACF2 = "Proactive case-finding, symptomatic TB",
+  PPM90_RedDelay2 = "Combined: 90% ppm + half cs",
+  Dx90_ACF2 = "Combined: 90% dx + ACF 2 times per year",
+  PPM90_ACF2 = "All measures combined"
 )
 
 
@@ -120,7 +122,7 @@ g_intv <- mss %>%
              aes(x = Year, y = CNR)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
-  scale_color_discrete(labels = scs) +
+  scale_fill_brewer(palette="Set1", labels = scs) +
   expand_limits(y = 0) +
   facet_wrap(Index~., scales = "free_y",  
              labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
@@ -133,11 +135,12 @@ g_intv
 g_intv0 <- mss %>% 
   filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2021) %>% 
+  filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
   ggplot() +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
-  scale_color_discrete(labels = scs) +
+  scale_colour_brewer(palette="Set1", labels = scs) +
   expand_limits(y = 0) +
   facet_wrap(Index~., scales = "free_y",  
              labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
@@ -147,15 +150,19 @@ g_intv0 <- mss %>%
 g_intv0
 
 
+
 g_avt <- avt %>% 
+  filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
   ggplot() +
-  #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
+  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("%", labels = scales::percent_format()) +
   scale_x_continuous("Year", breaks = c(2023, 2025, 2030, 2035)) +
-  scale_color_discrete(labels = scs) +
+  scale_fill_brewer(palette="Set1", labels = scs) +
+  scale_colour_brewer(palette="Set1", labels = scs) +
   facet_wrap(Index~., scales = "free_y", labeller = labeller(Index=c(AvtInc = "Incidence", AvtMor = "Mortality"))) +
   expand_limits(y = 0) +
+
   theme(legend.position = "bottom", legend.direction = "vertical")
 
 g_avt  

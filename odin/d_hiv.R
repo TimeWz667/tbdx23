@@ -43,37 +43,41 @@ n_years <- length(years)
 ## demography -----
 br[] <- user()
 dim(br) <- n_years
-
 br_t <- interpolate(years, br, "linear")
 
 dr[] <- user()
 dim(dr) <- n_years
-
 dr_t <- interpolate(years, dr, "linear")
 
-r_die_hiv <- user(0.03)
 
-mu <- (dr_t * n - r_die_hiv * Y[2]) / n
+dr_hiv0 <- user()
+drt_hiv <- user()
+dr_hiv1 <- user()
 
-mor <- r_die_hiv * Y[2]
+mu_h_t <- dr_hiv0 * exp(- drt_hiv * (t - Year0)) + dr_hiv1
+
+mu <- (dr_t * n - mu_h_t * Y[2]) / n
+
+mor <- mu_h_t * Y[2]
 
 d_pop[1] <- br_t * n - mu * U
-d_pop[2] <- - (r_die_hiv + mu) * H
+d_pop[2] <- - (mu_h_t + mu) * H
 d_pop[3] <- - mu * A
 dim(d_pop) <- n_hiv
-
 
 
 ## HIV
 r_hiv0 <- user()
 rt_hiv <- user()
 
-t0_art <- user()
+r_art0 <- user()
+r_art1 <- user()
 rt_art <- user()
+t0_art <- user()
 
 
-r_hiv <- r_hiv0 * exp(rt_hiv * (t - Year0))
-r_art <- 0.07 + 0.045 / (1 + exp(rt_art * (t - t0_art)))
+r_hiv <- r_hiv0 * exp(- rt_hiv * (t - Year0))
+r_art <- r_art0 + (r_art1 - r_art0) / (1 + exp(- rt_art * (t - t0_art)))
 
 
 U <- Y[1]

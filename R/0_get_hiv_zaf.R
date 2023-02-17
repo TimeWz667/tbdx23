@@ -16,6 +16,7 @@ reform <- function(df, index) {
       ),
       Index = index
     ) %>% 
+    filter(!is.na(Stat)) %>% 
     pivot_wider(names_from = Stat) %>% 
     select(Country:U)
 }
@@ -42,7 +43,7 @@ load(here::here("data", "ZAF", "d_pop.rdata"))
 d_hiv <- bind_rows(pr_plhiv, mor_hiv, pr_art, inc_tb, mor_tb_hiv) %>% 
   select(Country, Year, Index, M) %>% 
   pivot_wider(names_from = Index, values_from = M) %>% 
-  filter(Year >= 2010 & Year < 2020) %>% 
+  filter(Year >= 2009 & Year < 2020) %>% 
   left_join(d_pop_all) %>% 
   mutate(PrART_HIV = PrART_HIV / 100) %>% 
   select(-Amp, -Tag)
