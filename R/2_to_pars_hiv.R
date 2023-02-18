@@ -228,4 +228,20 @@ sims %>%
 
 
 
+# Output HIV parameters
 
+
+pars_hiv <- list(
+  r_art0 = x[1],
+  r_art1 = x[1] + x[2],
+  rt_art = x[3],
+  t0_art = x[4],
+  r_hiv0 = x[5],
+  rt_hiv = x[6],
+  dr_hiv0 = opt_drhiv$par[1],
+  drt_hiv = opt_drhiv$par[2],
+  dr_hiv1 = opt_drhiv$par[3]
+)
+
+
+jsonlite::write_json(pars_hiv, here::here("data", "pars", "ZAF", "pars_hiv.json"), digits = 10, auto_unbox = T)
