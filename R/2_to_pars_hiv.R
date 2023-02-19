@@ -240,7 +240,8 @@ pars_hiv <- list(
   rt_hiv = x[6],
   dr_hiv0 = opt_drhiv$par[1],
   drt_hiv = opt_drhiv$par[2],
-  dr_hiv1 = opt_drhiv$par[3]
+  dr_hiv1 = opt_drhiv$par[3],
+  y0 = hiv0
 )
 
 

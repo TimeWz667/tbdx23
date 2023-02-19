@@ -129,10 +129,13 @@ d_gp <- d_hiv %>%
   mutate(
     CNR_mu = Case / Pop,
     CNR_eps = sqrt(CNR_mu * (1 - CNR_mu) / Pop)
-  )
+  ) %>% 
+  rename(IncR_mu = IncR)
 
 
-d_gp
+d_gp %>% 
+  arrange(Group, Year) %>% 
+  write_csv(file = here::here("data", "pars", iso, "targets_hiv.csv"))
 
 
 

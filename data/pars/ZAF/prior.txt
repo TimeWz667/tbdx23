@@ -22,6 +22,8 @@ PCore dy {
         r_relapse_td = 0.008  # relapse after treatment default,
         r_relapse_tc = 0.004  # relapse after treatment completion
 
+        irr_hiv ~ unif(1, 30)
+
         // Treatment
         dur_succ = 0.5
         adr ~ unif(-0.1, 0.1)
