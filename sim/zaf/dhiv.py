@@ -92,7 +92,11 @@ class ModelHIV:
         da[I.A_Mor] += (deaths + deaths_tb)[I.PTB].sum()
 
     def calc_transmission(self, t, y, pars, dy, da, calc):
-        adj = 1
+        adr = pars['adr']
+        if t < self.Year0:
+            adj = 1
+        else:
+            adj = np.exp(- adr * (t - self.Year0))
         foi = adj * pars['beta'] * (pars['trans'] * y).sum() / calc['n']
 
         calc['infection'] = infection = foi * pars['sus'] * y
@@ -391,13 +395,15 @@ if __name__ == '__main__':
     repo_cs = RepoCascade(pars_cs, 2010)
 
     pars = dict(sample(r_prior))
-    pars['beta'] = 12
+    pars['beta'] = 8
     pars['rr_inf_asym'] = 1
-    pars['irr_hiv'] = 10
+    pars['irr_hiv'] = 30
+    pars['irr_art'] = 1 / 30
+    pars['adr'] = 0
     pars['cas'] = repo_cs.sample()
 
     inp = load_inputs('../../data/pars/ZAF')
-    model = Model(inp)
+    model = ModelHIV(inp)
     pars = model.update_parameters(pars)
 
     y0 = model.get_y0(pars)
@@ -418,7 +424,7 @@ if __name__ == '__main__':
     ms.IncR_NonHIV.plot(ax=axes[1, 0])
     ms.IncR_PLHIV.plot(ax=axes[1, 0])
     axes[1, 0].set_title('Incidence')
-    ms.MorR.plot(ax=axes[1, 1])
+    ms.MorR_apx.plot(ax=axes[1, 1])
     axes[1, 1].set_title('Mortality')
 
     ms.PrHIV.plot(ax=axes[0, 2])
