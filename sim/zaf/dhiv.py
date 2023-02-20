@@ -131,10 +131,12 @@ class ModelHIV:
         irr = pars['irr_hiv']
         trs_hiv = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
 
+        irr = pars['irr_hiv'] * pars['irr_art']
+        trs_art = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
+        trs = [trs, trs_hiv, trs_art]
+
         calc['inc_recent'] = np.zeros(I.N_Strata)
         calc['inc_remote'] = np.zeros(I.N_Strata)
-
-        trs = [trs, trs_hiv, trs_hiv]
 
         for i in range(I.N_Strata):
             dy[:, i] += calc_dy(y[:, i], trs[i])
