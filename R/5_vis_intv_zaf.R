@@ -5,21 +5,17 @@ theme_set(theme_bw())
 
 
 
-country = "IND"
+country = "ZAF"
 iso = glue::as_glue(country)
 
 
 scs <- c(
   Baseline = "Baseline",
   Dx90 = "Increased diagnostic uptake in healthcare settings",
-  PPM90 = "Increased diagnostic uptake, with PPM",
   #"Dx+PPM90" = "90% dx and 90% PPM",
   RedDelay2 = "half care-seeking delays",
   ACF2 = "Proactive case-finding, symptomatic TB",
-  PPM90_RedDelay2 = "Combined: 90% ppm + half cs",
-  Dx90_ACF2 = "Combined: 90% dx + ACF 2 times per year",
-  PPM90_ACF2 = "All measures combined",
-  AsymACF = "ACF, 10% the undernutrition asymptomatic TB per year"
+  Dx90_ACF2 = "Combined: 90% dx + ACF 2 times per year"
 )
 
 
@@ -136,7 +132,7 @@ g_intv
 g_intv0 <- mss %>% 
   filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2021) %>% 
-  filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
+  #filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
   ggplot() +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
@@ -153,7 +149,7 @@ g_intv0
 
 
 g_avt <- avt %>% 
-  filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
+  #filter(!Scenario %in% c(", "Dx90_ACF2")) %>% 
   ggplot() +
   geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
@@ -170,6 +166,6 @@ g_avt
 
 
 
-ggsave(g_intv, filename = here::here("results", "figs", "g_intv_ind.png"), width = 8, height = 4.5)
-ggsave(g_intv0, filename = here::here("results", "figs", "g_intv0_ind.png"), width = 6, height = 4.5)
-ggsave(g_avt, filename = here::here("results", "figs", "g_avt_ind.png"), width = 6, height = 4.5)
+ggsave(g_intv, filename = here::here("results", "figs", "g_intv_" + iso + ".png"), width = 8, height = 4.5)
+ggsave(g_intv0, filename = here::here("results", "figs", "g_intv0_" + iso + ".png"), width = 6, height = 4.5)
+ggsave(g_avt, filename = here::here("results", "figs", "g_avt_" + iso + ".png"), width = 6, height = 4.5)
