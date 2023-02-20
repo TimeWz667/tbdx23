@@ -16,3 +16,4 @@ sim/*/__pycache__/*
 notebooks/*-checkpoint.ipynb
 /notebooks/.ipynb_checkpoints/*
 data/AIDS/
+/results/*.7z
