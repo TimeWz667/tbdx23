@@ -4,7 +4,7 @@ __author__ = 'Chu-Chang Ku'
 __all__ = ['ModelIND', 'get_intv']
 
 
-def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, ppm=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0):
+def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, ppm=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0, r_asym_acf=0):
     cas = p['cas']
 
     pdx_pub = p['p_dx_pub']
@@ -26,11 +26,14 @@ def get_intv(p, pdx0_pub=None, pdx0_eng=None, pdx1_pub=None, pdx1_eng=None, ppm=
     r_csi1 = rr_csi * cas.R_CSI + rd_csi
     r_recsi1 = rr_recsi * cas.R_ReCSI + rd_recsi
 
+    r_asym_acf = 0 if r_asym_acf is None else r_asym_acf
+
     return {
         'pdx0': pdx0,
         'pdx1': pdx1,
         'r_csi_acf': r_csi1 - cas.R_CSI,
         'r_recsi_acf': r_recsi1 - cas.R_ReCSI,
+        'r_asym_acf': r_asym_acf,
         'ppm': ppm
     }
 

@@ -6,11 +6,32 @@ import pandas as pd
 
 
 __author__ = 'Chu-Chang Ku'
-__all__ = ['ModelHIV']
+__all__ = ['ModelHIV', 'get_intv']
 
 
 def blend(x0, x1, wt):
     return x0 + wt * (x1 - x0)
+
+
+def get_intv(p, pdx0=None, pdx1=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0):
+    cas = p['cas']
+
+    pdx0_o = cas.PrDx0
+    pdx1_o = cas.PrDx1
+
+    pdx0 = pdx0_o if pdx0 is None else pdx0
+    pdx1 = pdx1_o if pdx1 is None else pdx1
+
+    r_csi1 = rr_csi * cas.R_CSI + rd_csi
+    r_recsi1 = rr_recsi * cas.R_ReCSI + rd_recsi
+
+    return {
+        'pdx0': pdx0,
+        'pdx1': pdx1,
+        'r_csi_acf': r_csi1 - cas.R_CSI,
+        'r_recsi_acf': r_recsi1 - cas.R_ReCSI,
+        'r_asym_acf': 0
+    }
 
 
 class ModelHIV:
@@ -92,11 +113,12 @@ class ModelHIV:
         da[I.A_Mor] += (deaths + deaths_tb)[I.PTB].sum()
 
     def calc_transmission(self, t, y, pars, dy, da, calc):
-        adr = pars['adr']
+        adr = 0 # pars['adr']
         if t < self.Year0:
             adj = 1
         else:
             adj = np.exp(- adr * (t - self.Year0))
+
         foi = adj * pars['beta'] * (pars['trans'] * y).sum() / calc['n']
 
         calc['infection'] = infection = foi * pars['sus'] * y
@@ -135,7 +157,7 @@ class ModelHIV:
         irr = pars['irr_hiv']
         trs_hiv = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
 
-        irr = pars['irr_hiv'] * pars['irr_art']
+        irr = pars['irr_art']
         trs_art = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
         trs = [trs, trs_hiv, trs_art]
 
@@ -172,8 +194,8 @@ class ModelHIV:
             intv = pars['intv']
             pdx0 = blend(pdx0, intv['pdx0'], wt)
             pdx1 = blend(pdx1, intv['pdx1'], wt)
-            r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pars['p_dx_pub']
-            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pars['p_dx_pub']
+            r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pdx0
+            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pdx0
         else:
             r_csi_acf = 0
             r_recsi_acf = 0
@@ -378,6 +400,15 @@ class ModelHIV:
 
         return ys, ms, {'succ': True, 't0': t0}
 
+    def simulate_intv(self, p, ys0, intv=None):
+        if intv is not None:
+            p['intv'] = intv
+        elif 'intv' in p:
+            del p['intv']
+
+        ys, ms, msg = self.simulate_onward(p, ys0, 2036, 1)
+        return ys, ms, msg
+
 
 if __name__ == '__main__':
     from sim.core.inputs import load_inputs
@@ -397,8 +428,8 @@ if __name__ == '__main__':
     pars = dict(sample(r_prior))
     pars['beta'] = 8
     pars['rr_inf_asym'] = 1
-    pars['irr_hiv'] = 30
-    pars['irr_art'] = 1 / 30
+    pars['irr_hiv'] = 40
+    pars['irr_art'] = 0.5
     pars['adr'] = 0
     pars['cas'] = repo_cs.sample()
 

@@ -164,15 +164,18 @@ class Model:
             pdx1 = blend(pdx1, intv['pdx1'], wt)
             r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pars['p_dx_pub']
             r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pars['p_dx_pub']
+            r_asym_acf = blend(0, intv['r_asym_acf'], wt)
         else:
             r_csi_acf = 0
             r_recsi_acf = 0
+            r_asym_acf = 0
 
         r_det_s = k_covid * r_csi * pdx0
         r_fn_s = k_covid * r_csi * (1 - pdx0)
         r_det_c = k_covid * r_recsi * pdx1
 
         trs = [
+            (I.Asym, I.Tx, r_asym_acf, 'acf_a'),
             (I.Sym, I.Tx, r_det_s, 'det'),
             (I.Sym, I.ExCS, r_fn_s, 'fn'),
             (I.ExCS, I.Tx, r_det_c, 'det'),
@@ -184,10 +187,13 @@ class Model:
 
         calc['det'] = 0
         calc['acf'] = 0
+        calc['acf_a'] = 0
+
         for i in range(I.N_Strata):
             dy[:, i] += calc_dy(y[:, i], trs)
             calc['det'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'det')
-            calc['acf'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'acf')
+            calc['acf'] += extract_tr(y[:, i], trs, fil=lambda x: x[3].startswith('acf'))
+            calc['acf_a'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'acf_a')
 
         da[I.A_Det] += calc['det']
         da[I.A_ACF] += calc['acf']
@@ -239,6 +245,8 @@ class Model:
             'MorR': mor / n,
             'LTBI': y[I.LTBI].sum() / n,
             'DetR': calc['det'] / n,
+            'AcfR': calc['acf'] / n,
+            'AcfRAsym': calc['acf_a'] / n,
             'CNR': calc['det'] / n * (cas.PrReport(t) / cas.PPV),
             'CumInc': aux[I.A_Inc],
             'CumIncRecent': aux[I.A_IncRecent],
@@ -280,6 +288,8 @@ class Model:
             'IncR_apx': ms.IncR.rolling(2).mean().shift(-1),
             'MorR_apx': ms.MorR.rolling(2).mean().shift(-1),
             'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
+            'AcfR': ms.AcfR.rolling(2).mean().shift(-1),
+            'AcfRAsym': ms.AcfRAsym.rolling(2).mean().shift(-1),
             'CumInc': ms.CumInc.rolling(2).mean().shift(-1),
             'CumMor': ms.CumMor.rolling(2).mean().shift(-1),
             'CumACF': ms.CumACF.rolling(2).mean().shift(-1),
