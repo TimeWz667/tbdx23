@@ -56,6 +56,8 @@ class ModelHIV:
     def update_parameters(self, pars):
         pars = dict(pars)
 
+        pars['cas'].reform(pdx0=0.4, pdx1=0.7)
+
         pars['sus'] = sus = np.zeros((I.N_State_TB, I.N_Strata))
 
         sus[I.U] = 1
@@ -155,10 +157,10 @@ class ModelHIV:
         ]
 
         irr = pars['irr_hiv']
-        trs_hiv = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
+        trs_hiv = [(fr, to, rate * irr if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
 
         irr = pars['irr_art']
-        trs_art = [(fr, to, rate * irr, tag if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
+        trs_art = [(fr, to, rate * irr if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
         trs = [trs, trs_hiv, trs_art]
 
         calc['inc_recent'] = np.zeros(I.N_Strata)
@@ -195,7 +197,7 @@ class ModelHIV:
             pdx0 = blend(pdx0, intv['pdx0'], wt)
             pdx1 = blend(pdx1, intv['pdx1'], wt)
             r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pdx0
-            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pdx0
+            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pdx1
         else:
             r_csi_acf = 0
             r_recsi_acf = 0
@@ -429,7 +431,7 @@ if __name__ == '__main__':
     pars['beta'] = 8
     pars['rr_inf_asym'] = 1
     pars['irr_hiv'] = 40
-    pars['irr_art'] = 0.5
+    pars['irr_art'] = 3
     pars['adr'] = 0
     pars['cas'] = repo_cs.sample()
 
