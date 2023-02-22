@@ -17,5 +17,5 @@ def simulate_intv(self, p, ys0, intv=None):
 class ModelZAF(Model):
     def update_parameters(self, pars):
         pars = Model.update_parameters(self, pars)
-        pars['cas'].reform(pdx0=0.4, pdx1=0.7)
+        pars['cas'].reform(pdx0=0.45, pdx1=0.45)
         return pars

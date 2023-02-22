@@ -30,7 +30,8 @@ d2plot <- local({
 tar <- read_csv(here::here("data", "pars", iso, "targets.csv"))
 tarq  <- read_csv(here::here("data", "pars", iso, "targets_q.csv"))
 
-
+tarhiv <- read_csv(here::here("data", "pars", iso, "targets_hiv.csv"))
+ 
 
 mss0 <- read_csv(here::here("results", "C_" + iso, "RunPost.csv"))
 mss1 <- read_csv(here::here("results", "D_" + iso, "RunPost.csv")) 
@@ -58,14 +59,41 @@ mss0 %>%
   expand_limits(y = 0)
 
 
+th <- tarhiv %>% 
+  mutate(
+    Index = ifelse(Group == "HIV", "IncR_PLHIV", "IncR_NonHIV")  
+  )
+
+
+mss0 %>% 
+  select(-IncR_apx) %>% 
+  select(Year = Time, starts_with("IncR_"), IncR_All = IncR, Key) %>% 
+  pivot_longer(starts_with("IncR_"), names_to = "Index") %>% 
+  group_by(Year, Index) %>% 
+  summarise(
+    M = mean(value),
+    L = quantile(value, 0.025),
+    U = quantile(value, 0.975)
+  ) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_ribbon(aes(x = Year, ymin = L, ymax = U), alpha = 0.2) +
+  geom_line(aes(x = Year, y = M)) + 
+  geom_pointrange(data = th, aes(x = Year, y = IncR_mu, ymin = IncR_L, ymax = IncR_U)) +
+  scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  facet_wrap(.~Index) +
+  expand_limits(y = 0)
+
+
+
 mss1 %>% 
   select(Year = Time, IncR, MorR, CNR, Key) %>% 
   pivot_longer(c(IncR, MorR, CNR), names_to = "Index") %>% 
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, 0.025),
+    U = quantile(value, 0.975)
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -81,13 +109,14 @@ bind_rows(
   mss0 %>% filter(Time <= 2020),
   mss1 %>% mutate(CNR = CNR * 4)
 ) %>% 
+  mutate(Time = Time + 0.5) %>% 
   select(Year = Time, CNR = CNR, Key) %>% 
   pivot_longer(c(CNR), names_to = "Index") %>% 
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, 0.025),
+    U = quantile(value, 0.975)
   ) %>% 
   ungroup() %>% 
   ggplot() +

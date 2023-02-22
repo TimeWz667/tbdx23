@@ -19,7 +19,7 @@ scs <- c(
   RedDelay2 = "half care-seeking delays",
   ACF2 = "Proactive case-finding, symptomatic TB",
   PPM90_RedDelay2 = "Combined: 90% ppm + half cs",
-  AsymACF = "ACF, 10% the undernutrition asymptomatic TB per year",
+  AsymACF = "ACF, 10% of asymptomatic TB in vulnerable popn",
   Dx90_ACF2 = "Combined: 90% dx + ACF 2 times per year",
   PPM90_ACF2 = "All measures combined"
 )

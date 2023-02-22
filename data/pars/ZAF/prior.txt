@@ -1,6 +1,6 @@
 PCore dy {
         // transmission
-        beta ~ unif(1, 30)
+        beta ~ unif(1, 20)
 
         rr_inf_asym = 1
         rr_inf_cs = 1
@@ -22,7 +22,7 @@ PCore dy {
         r_relapse_td = 0.008  # relapse after treatment default,
         r_relapse_tc = 0.004  # relapse after treatment completion
 
-        irr_hiv ~ unif(1, 30)
+        irr_hiv ~ unif(1, 50)
         irr_art ~ unif(1, irr_hiv)
 
         // Treatment
