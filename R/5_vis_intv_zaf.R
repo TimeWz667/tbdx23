@@ -7,6 +7,9 @@ theme_set(theme_bw())
 
 country = "ZAF"
 iso = glue::as_glue(country)
+ci_range <- 0.95
+ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
+t_end <- 2030
 
 
 scs <- c(
@@ -15,7 +18,7 @@ scs <- c(
   #"Dx+PPM90" = "90% dx and 90% PPM",
   RedDelay2 = "half care-seeking delays",
   ACF2 = "Proactive case-finding, symptomatic TB",
-  Dx90_ACF2 = "Combined: 90% dx + ACF 2 times per year"
+  Dx90_ACF2 = "All measures combined"
 )
 
 
@@ -49,8 +52,8 @@ mss = bind_rows(mss0, mss1) %>%
   group_by(Time, Scenario, Index) %>% 
   summarise(
     M = median(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   mutate(
@@ -65,8 +68,8 @@ mss1 %>%
   group_by(Time) %>% 
   summarise(
     M = median(CumACF),
-    L = quantile(CumACF, 0.25),
-    U = quantile(CumACF, 0.75)
+    L = quantile(CumACF, ru[1]),
+    U = quantile(CumACF, ru[2])
   ) %>% 
   mutate(
     across(c(M, L, U), function(x) x / (Time - 2023))
@@ -99,8 +102,8 @@ avt <- avt %>%
   group_by(Time, Scenario, Index) %>% 
   summarise(
     M = median(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   mutate(
@@ -110,6 +113,7 @@ avt <- avt %>%
 
 
 g_intv <- mss %>% 
+  filter(Time <= t_end) %>%
   #filter(Time > 2018) %>% 
   ggplot() +
   #geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
@@ -119,7 +123,7 @@ g_intv <- mss %>%
              aes(x = Year, y = CNR)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
-  scale_fill_brewer(palette="Set1", labels = scs) +
+  scale_fill_brewer(palette="Dark2", labels = scs) +
   expand_limits(y = 0) +
   facet_wrap(Index~., scales = "free_y",  
              labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
@@ -132,12 +136,13 @@ g_intv
 g_intv0 <- mss %>% 
   filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2021) %>% 
+  filter(Time <= t_end) %>%
   #filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
   ggplot() +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
-  scale_colour_brewer(palette="Set1", labels = scs) +
+  scale_colour_brewer(palette="Dark2", labels = scs) +
   expand_limits(y = 0) +
   facet_wrap(Index~., scales = "free_y",  
              labeller = labeller(Index=c(CNR="Case notification rate", IncR = "Incidence", MorR = "Mortality"))) +
@@ -149,14 +154,15 @@ g_intv0
 
 
 g_avt <- avt %>% 
+  filter(Time <= t_end) %>%
   #filter(!Scenario %in% c(", "Dx90_ACF2")) %>% 
   ggplot() +
   geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   scale_y_continuous("%", labels = scales::percent_format()) +
   scale_x_continuous("Year", breaks = c(2023, 2025, 2030, 2035)) +
-  scale_fill_brewer(palette="Set1", labels = scs) +
-  scale_colour_brewer(palette="Set1", labels = scs) +
+  scale_fill_brewer(palette="Dark2", labels = scs) +
+  scale_colour_brewer(palette="Dark2", labels = scs) +
   facet_wrap(Index~., scales = "free_y", labeller = labeller(Index=c(AvtInc = "Incidence", AvtMor = "Mortality"))) +
   expand_limits(y = 0) +
 

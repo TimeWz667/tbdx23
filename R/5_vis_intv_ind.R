@@ -7,6 +7,9 @@ theme_set(theme_bw())
 
 country = "IND"
 iso = glue::as_glue(country)
+ci_range <- 0.95
+ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
+t_end <- 2030
 
 
 t_end <- 2030
@@ -55,8 +58,8 @@ mss = bind_rows(mss0, mss1) %>%
   group_by(Time, Scenario, Index) %>% 
   summarise(
     M = median(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   mutate(
@@ -71,8 +74,8 @@ mss1 %>%
   group_by(Time) %>% 
   summarise(
     M = median(CumACF),
-    L = quantile(CumACF, 0.25),
-    U = quantile(CumACF, 0.75)
+    L = quantile(CumACF, ru[1]),
+    U = quantile(CumACF, ru[2])
   ) %>% 
   mutate(
     across(c(M, L, U), function(x) x / (Time - 2023))
@@ -105,8 +108,8 @@ avt <- avt %>%
   group_by(Time, Scenario, Index) %>% 
   summarise(
     M = median(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   mutate(

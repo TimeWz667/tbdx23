@@ -5,8 +5,10 @@ theme_set(theme_bw())
 
 
 
-country = "ZAF"
-iso = glue::as_glue(country)
+country <- "ZAF"
+iso <- glue::as_glue(country)
+ci_range <- 0.95
+ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
 
 
 d2plot <- local({
@@ -42,8 +44,8 @@ mss0 %>%
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -65,25 +67,29 @@ th <- tarhiv %>%
   )
 
 
-mss0 %>% 
+g_gof_inch_zaf <- mss0 %>% 
   select(-IncR_apx) %>% 
   select(Year = Time, starts_with("IncR_"), IncR_All = IncR, Key) %>% 
   pivot_longer(starts_with("IncR_"), names_to = "Index") %>% 
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.025),
-    U = quantile(value, 0.975)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
   geom_ribbon(aes(x = Year, ymin = L, ymax = U), alpha = 0.2) +
   geom_line(aes(x = Year, y = M)) + 
   geom_pointrange(data = th, aes(x = Year, y = IncR_mu, ymin = IncR_L, ymax = IncR_U)) +
+  geom_pointrange(data = d2plot %>% filter(Index == "IncR") %>% 
+                    mutate(Index = "IncR_All"), 
+                  aes(x = Year, y = M, ymin = L, ymax = U)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   facet_wrap(.~Index) +
   expand_limits(y = 0)
 
+g_gof_inch_zaf
 
 
 mss1 %>% 
@@ -92,8 +98,8 @@ mss1 %>%
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.025),
-    U = quantile(value, 0.975)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -115,8 +121,8 @@ bind_rows(
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.025),
-    U = quantile(value, 0.975)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -129,5 +135,9 @@ bind_rows(
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
   facet_wrap(.~Index, scales = "free_y") +
   expand_limits(y = 0)
+
+
+ggsave(g_gof_inch_zaf, filename = here::here("results", "figs", "g_gof_inch_zaf.png"), width = 8, height = 4)
+
 
 
