@@ -141,7 +141,7 @@ g_intv
 
 g_intv0 <- mss %>% 
   filter(Index %in% c("IncR", "MorR")) %>% 
-  filter(Time > 2021) %>% 
+  filter(Time >= 2021) %>% 
   filter(Time <= t_end) %>% 
   filter(!Scenario %in% c("RedDelay2", "PPM90_RedDelay2", "Dx90_ACF2")) %>% 
   ggplot() +
