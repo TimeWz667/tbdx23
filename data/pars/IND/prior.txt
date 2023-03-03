@@ -27,6 +27,8 @@ PCore dy {
         p_dx_pub = 0.65
         p_dx_pri = 0.27
 
+        rt_cs ~ unif(0, 0.15)
+
         // Treatment
         dur_succ = 0.5
         adr ~ unif(0, 0.05)

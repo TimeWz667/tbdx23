@@ -12,8 +12,6 @@ ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
 t_end <- 2030
 
 
-t_end <- 2030
-
 scs <- c(
   Baseline = "Baseline",
   Dx90 = "Increased diagnostic uptake in healthcare settings",

@@ -1,42 +1,19 @@
 import numpy as np
-import sim.zaf.keys_hiv as I
+import sim.core.keys as I
 from sim.util import calc_dy, extract_tr
 from scipy.integrate import solve_ivp
 import pandas as pd
 
 
 __author__ = 'Chu-Chang Ku'
-__all__ = ['ModelHIV', 'get_intv']
+__all__ = ['ModelPupr']
 
 
 def blend(x0, x1, wt):
     return x0 + wt * (x1 - x0)
 
 
-def get_intv(p, pdx0=None, pdx1=None, rr_csi=1, rr_recsi=1, rd_csi=0, rd_recsi=0, r_asym_acf=0):
-    cas = p['cas']
-
-    pdx0_o = cas.PrDx0
-    pdx1_o = cas.PrDx1
-
-    pdx0 = pdx0_o if pdx0 is None else pdx0
-    pdx1 = pdx1_o if pdx1 is None else pdx1
-
-    r_csi1 = rr_csi * cas.R_CSI + rd_csi
-    r_recsi1 = rr_recsi * cas.R_ReCSI + rd_recsi
-
-    r_asym_acf = 0 if r_asym_acf is None else r_asym_acf
-
-    return {
-        'pdx0': pdx0,
-        'pdx1': pdx1,
-        'r_csi_acf': r_csi1 - cas.R_CSI,
-        'r_recsi_acf': r_recsi1 - cas.R_ReCSI,
-        'r_asym_acf': r_asym_acf
-    }
-
-
-class ModelHIV:
+class ModelPupr:
     def __init__(self, inputs):
         self.Inputs = inputs
         self.Year0 = inputs.Demography.Year0
@@ -45,21 +22,19 @@ class ModelHIV:
     def get_y0(self, pars) -> np.ndarray:
         y0 = np.zeros((I.N_State_TB, I.N_Strata))
 
-        n0 = self.Inputs.DyHIV.HIV0.reshape((1, -1))
+        n0 = self.Inputs.Demography.N0
 
-        y0[I.Asym] = n0 * pars['cas'].Prev['Asym']
-        y0[I.Sym] = n0 * pars['cas'].Prev['Sym']
-        y0[I.ExCS] = n0 * pars['cas'].Prev['ExCS']
-        y0[I.SLat] = n0 * 0.5
-        y0[I.U] = n0 - y0.sum(0, keepdims=True)
+        y0[I.Asym, 0] = n0 * pars['cas'].Prev['Asym']
+        y0[I.Sym, 0] = n0 * pars['cas'].Prev['Sym']
+        y0[I.ExCS, 0] = n0 * pars['cas'].Prev['ExCS']
+        y0[I.SLat, 0] = n0 * 0.5
+        y0[I.U, 0] = n0 - y0.sum(0, keepdims=True)
 
         return np.concatenate([y0.reshape(-1), np.zeros(I.N_Aux)])
 
     def update_parameters(self, pars):
         pars = dict(pars)
-
-        pars['cas'].reform(pdx0=0.4, pdx1=0.7)
-
+        pars['adr'] = 0
         pars['sus'] = sus = np.zeros((I.N_State_TB, I.N_Strata))
 
         sus[I.U] = 1
@@ -81,13 +56,14 @@ class ModelHIV:
         if 'k_covid' not in pars:
             pars['k_covid'] = lambda t: 1
 
+        pars['cas'].reform(pdx0=0.45, pdx1=0.45)
         return pars
 
     def calc_demography(self, t, y, pars, dy, da, calc):
         rates = self.Inputs.Demography(max(t, self.Year0))
-        r_hiv = self.Inputs.DyHIV(t)
 
         n = calc['n']
+
         mu = rates['r_die']
 
         dr_tb = np.zeros_like(y)
@@ -96,34 +72,33 @@ class ModelHIV:
         dr_tb[I.ExCS] = pars['cas'].R_Death_S
         dr_tb[I.Tx] = pars['r_death_tx']
 
-        dr_hiv = np.zeros_like(y)
-        dr_hiv[:, 1] = r_hiv['r_die_hiv']
-
-        mu = mu - ((dr_tb + dr_hiv) * y).sum() / y.sum()
+        mu = mu - (dr_tb * y).sum() / y.sum()
 
         calc['deaths'] = deaths = mu * y
         calc['deaths_tb'] = deaths_tb = dr_tb * y
-        calc['deaths_hiv'] = deaths_hiv = dr_hiv * y
 
         # Demography
         dy[I.U, 0] += rates['r_birth'] * n
-        dy -= deaths + deaths_tb + deaths_hiv
+        dy -= deaths + deaths_tb
 
-        rh, ra = r_hiv['r_hiv'], r_hiv['r_art']
-
-        dy[:, I.U] += - rh * y[:, I.U]
-        dy[:, I.HIV] += rh * y[:, I.U] - ra * y[:, I.HIV]
-        dy[:, I.ART] += ra * y[:, I.HIV]
         da[I.A_Mor] += (deaths + deaths_tb)[I.PTB].sum()
 
     def calc_transmission(self, t, y, pars, dy, da, calc):
-        adr = 0 # pars['adr']
+        adr = pars['adr']
         if t < self.Year0:
             adj = 1
         else:
             adj = np.exp(- adr * (t - self.Year0))
+        # elif t < 2026:
+        #     adj = np.exp(- adr * (2023 - self.Year0))
+        #     wt = 0.5 * blend(1, 0.5, (t - 2023) / (2026 - 2023))
+        #     adj *= np.exp(- adr * wt)
+        # else:
+        #     adj = np.exp(- adr * (2023 - self.Year0))
+        #     adj *= np.exp(- adr * np.exp(- adr * (2026 - 2023)))
+        #     adj *= np.exp(- adr / 2 * (t - 2026))
 
-        foi = adj * pars['beta'] * (pars['trans'] * y).sum() / calc['n']
+        foi = 1 * pars['beta'] * (pars['trans'] * y).sum() / calc['n']
 
         calc['infection'] = infection = foi * pars['sus'] * y
 
@@ -158,29 +133,19 @@ class ModelHIV:
             (I.RSt, I.U, r_clear, 'self_clear'),
         ]
 
-        irr = pars['irr_hiv']
-        trs_hiv = [(fr, to, rate * irr if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
-
-        irr = pars['irr_art']
-        trs_art = [(fr, to, rate * irr if tag.startswith('inc') else rate, tag) for fr, to, rate, tag in trs]
-        trs = [trs, trs_hiv, trs_art]
-
-        calc['inc_recent'] = np.zeros(I.N_Strata)
-        calc['inc_remote'] = np.zeros(I.N_Strata)
+        calc['inc_recent'] = 0
+        calc['inc_remote'] = 0
 
         for i in range(I.N_Strata):
-            dy[:, i] += calc_dy(y[:, i], trs[i])
-
-            calc['inc_recent'][i] = extract_tr(y[:, i], trs[i], fil=lambda x: x[3] == 'inc_recent')
-            calc['inc_remote'][i] = extract_tr(y[:, i], trs[i], fil=lambda x: x[3] == 'inc_remote')
+            dy[:, i] += calc_dy(y[:, i], trs)
+            calc['inc_recent'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'inc_recent')
+            calc['inc_remote'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'inc_remote')
 
         calc['inc'] = calc['inc_recent'] + calc['inc_remote']
 
-        da[I.A_Inc] += calc['inc'].sum()
-        da[I.A_IncRecent] += calc['inc_recent'].sum()
-        da[I.A_IncRemote] += calc['inc_remote'].sum()
-        da[I.A_Inc_NonHIV] += calc['inc'][0]
-        da[I.A_Inc_PLHIV] += calc['inc'][1:].sum()
+        da[I.A_Inc] += calc['inc']
+        da[I.A_IncRecent] += calc['inc_recent']
+        da[I.A_IncRemote] += calc['inc_remote']
 
     def calc_cascade(self, t, y, pars, dy, da, calc):
         cas = pars['cas']
@@ -198,20 +163,22 @@ class ModelHIV:
             intv = pars['intv']
             pdx0 = blend(pdx0, intv['pdx0'], wt)
             pdx1 = blend(pdx1, intv['pdx1'], wt)
-            r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pdx0
-            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pdx1
+            r_csi_acf = blend(0, intv['r_csi_acf'], wt) * pars['p_dx_pub']
+            r_recsi_acf = blend(0, intv['r_recsi_acf'], wt) * pars['p_dx_pub']
             r_asym_acf = blend(0, intv['r_asym_acf'], wt)
         else:
             r_csi_acf = 0
             r_recsi_acf = 0
             r_asym_acf = 0
 
-        r_det_s = k_covid * r_csi * pdx0
-        r_fn_s = k_covid * r_csi * (1 - pdx0)
-        r_det_c = k_covid * r_recsi * pdx1
+        k_cs = np.exp(pars['rt_cs'] * (max(t, 2010) - 2021)) if t < 2021 else 1
+
+        r_det_s = k_covid * k_cs * r_csi * pdx0
+        r_fn_s = k_covid * k_cs * r_csi * (1 - pdx0)
+        r_det_c = k_covid * k_cs * r_recsi * pdx1
 
         trs = [
-
+            (I.Asym, I.Tx, r_asym_acf, 'acf_a'),
             (I.Sym, I.Tx, r_det_s, 'det'),
             (I.Sym, I.ExCS, r_fn_s, 'fn'),
             (I.ExCS, I.Tx, r_det_c, 'det'),
@@ -221,19 +188,15 @@ class ModelHIV:
             (I.Tx, I.RHigh, pars['r_tl'], 'txl'),
         ]
 
-        trs_hiv = [list(trs) for _ in range(3)]
-        trs_hiv[1].append((I.Asym, I.Tx, r_asym_acf, 'acf_a'))
-        trs_hiv[2].append((I.Asym, I.Tx, r_asym_acf, 'acf_a'))
-
         calc['det'] = 0
         calc['acf'] = 0
         calc['acf_a'] = 0
 
         for i in range(I.N_Strata):
-            dy[:, i] += calc_dy(y[:, i], trs_hiv[i])
-            calc['det'] += extract_tr(y[:, i], trs_hiv[i], fil=lambda x: x[3] == 'det')
-            calc['acf'] += extract_tr(y[:, i], trs_hiv[i], fil=lambda x: x[3] == 'acf')
-            calc['acf_a'] += extract_tr(y[:, i], trs_hiv[i], fil=lambda x: x[3] == 'acf_a')
+            dy[:, i] += calc_dy(y[:, i], trs)
+            calc['det'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'det')
+            calc['acf'] += extract_tr(y[:, i], trs, fil=lambda x: x[3].startswith('acf'))
+            calc['acf_a'] += extract_tr(y[:, i], trs, fil=lambda x: x[3] == 'acf_a')
 
         da[I.A_Det] += calc['det']
         da[I.A_ACF] += calc['acf']
@@ -272,28 +235,25 @@ class ModelHIV:
         self.calc_demography(t, y, pars, dy, da, calc)
 
         mor = (calc['deaths_tb'] + calc['deaths'])[I.PTB].sum()
-        ns = y.sum(0)
+
         cas = pars['cas']
         mea = {
             'Time': t,
             'N': n,
-            'N_NonHIV': ns[0],
-            'N_HIV': ns[1],
-            'N_ART': ns[2],
             'Prev': y[I.PTB].sum() / n,
             'PrevA': y[I.Asym].sum() / n,
             'PrevS': y[I.Sym].sum() / n,
             'PrevC': y[I.ExCS].sum() / n,
-            'IncR': calc['inc'].sum() / n,
+            'IncR': calc['inc'] / n,
             'MorR': mor / n,
             'LTBI': y[I.LTBI].sum() / n,
             'DetR': calc['det'] / n,
-            'CNR': calc['det'] / n * (cas.PrReport(t) / cas.PPV),
+            'AcfR': calc['acf'] / n,
+            'AcfRAsym': calc['acf_a'] / n,
+            'CNR': calc['det'] / n * (cas.PrReport(2024) / cas.PPV),
             'CumInc': aux[I.A_Inc],
             'CumIncRecent': aux[I.A_IncRecent],
             'CumIncRemote': aux[I.A_IncRemote],
-            'CumIncPLHIV': aux[I.A_Inc_PLHIV],
-            'CumIncNonHIV': aux[I.A_Inc_NonHIV],
             'CumMor': aux[I.A_Mor],
             'CumDet': aux[I.A_Det],
             'CumNoti': aux[I.A_Noti],
@@ -327,25 +287,16 @@ class ModelHIV:
     def reform_ms(ms):
         ms = pd.DataFrame(ms).set_index('Time')
         ns = ms.N.rolling(2).mean()
-        ns_nh = ms.N_NonHIV.rolling(2).mean()
-        ns_hiv = ms.N_HIV.rolling(2).mean()
-        ns_art = ms.N_ART.rolling(2).mean()
         ms1 = pd.DataFrame({
-            'N': ns,
-            'N_NonHIV': ns_nh,
-            'N_HIV': ns_hiv,
-            'N_ART': ns_art,
-            'PrHIV': (ns_hiv + ns_art) / ns,
-            'PrART': ns_art / (ns_hiv + ns_art),
             'IncR_apx': ms.IncR.rolling(2).mean().shift(-1),
             'MorR_apx': ms.MorR.rolling(2).mean().shift(-1),
             'CNR_apx': ms.CNR.rolling(2).mean().shift(-1),
+            'AcfR': ms.AcfR.rolling(2).mean().shift(-1),
+            'AcfRAsym': ms.AcfRAsym.rolling(2).mean().shift(-1),
             'CumInc': ms.CumInc.rolling(2).mean().shift(-1),
             'CumMor': ms.CumMor.rolling(2).mean().shift(-1),
             'CumACF': ms.CumACF.rolling(2).mean().shift(-1),
             'IncR': (ms.CumInc.diff() / ns).shift(-1),
-            'IncR_NonHIV': (ms.CumIncNonHIV.diff() / ns_nh).shift(-1),
-            'IncR_PLHIV': (ms.CumIncPLHIV.diff() / (ns_hiv + ns_art)).shift(-1),
             'MorR': (ms.CumMor.diff() / ns).shift(-1),
             'DetR': (ms.CumDet.diff() / ns).shift(-1),
             'CNR': (ms.CumNoti.diff() / ns).shift(-1),
@@ -360,7 +311,7 @@ class ModelHIV:
 
     def simulate_to_fit(self, p, t_eval=np.linspace(2014, 2020, 7)):
         p = self.update_parameters(p) if 'sus' not in p else p
-        y0 = self.get_y0(p).reshape(-1)
+        y0 = self.get_y0(p)
 
         try:
             ys, ms = self.__sim(p, y0, self.Year0 - 300, max(t_eval), t_eval)
@@ -433,29 +384,28 @@ if __name__ == '__main__':
 
     rd.seed(1167)
 
-    with open('../../data/pars/ZAF/prior.txt', 'r') as f:
+    with open('../../data/pars/IND/prior.txt', 'r') as f:
         r_prior = bayes_net_from_script(f.read())
 
-    pars_cs = pd.read_csv('../../results/pars_ZAF.csv')
+    pars_cs = pd.read_csv('../../results/pars_IND.csv')
     repo_cs = RepoCascade(pars_cs, 2010)
 
     pars = dict(sample(r_prior))
     pars['beta'] = 8
     pars['rr_inf_asym'] = 1
-    pars['irr_hiv'] = 40
-    pars['irr_art'] = 3
     pars['adr'] = 0
     pars['cas'] = repo_cs.sample()
+    pars['rt_cs'] = 0.05
 
-    inp = load_inputs('../../data/pars/ZAF')
-    model = ModelHIV(inp)
+    inp = load_inputs('../../data/pars/IND')
+    model = ModelPupr(inp)
     pars = model.update_parameters(pars)
 
     y0 = model.get_y0(pars)
 
     ys, ms, _ = model.simulate_to_fit(pars, t_eval=np.linspace(2000, 2030, 31))
 
-    fig, axes = plt.subplots(2, 3)
+    fig, axes = plt.subplots(2, 2)
 
     ms.Prev.plot(ax=axes[0, 0])
     ms.PrevA.plot(ax=axes[0, 0])
@@ -466,22 +416,9 @@ if __name__ == '__main__':
     ms.DetR.plot(ax=axes[0, 1])
     axes[0, 1].set_title('CNR')
     ms.IncR.plot(ax=axes[1, 0])
-    ms.IncR_NonHIV.plot(ax=axes[1, 0])
-    ms.IncR_PLHIV.plot(ax=axes[1, 0])
     axes[1, 0].set_title('Incidence')
-    ms.MorR_apx.plot(ax=axes[1, 1])
+    ms.MorR.plot(ax=axes[1, 1])
     axes[1, 1].set_title('Mortality')
-
-    ms.PrHIV.plot(ax=axes[0, 2])
-    ms.PrART.plot(ax=axes[0, 2])
-    axes[0, 2].set_title('HIV')
-
-    ms.N_NonHIV.plot(ax=axes[1, 2])
-    ms.N_HIV.plot(ax=axes[1, 2])
-    ms.N_ART.plot(ax=axes[1, 2])
-    axes[1, 2].set_title('Population')
 
     fig.tight_layout()
     plt.show()
-
-    print(ms[['N', 'N_NonHIV', 'N_HIV', 'N_ART']])
