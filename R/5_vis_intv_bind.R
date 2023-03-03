@@ -18,7 +18,8 @@ scs <- c(
   ACF2 = "(C) Proactive case-finding, symptomatic TB",
   AsymACF = "(D) ACF, 10% of asymptomatic TB in vulnerable popn",
   PPM90_ACF2 = "Combined measures: (B) + (C) + (D)",
-  Dx90_ACF2 = "Combined measures: (A) + (C) + (D)"
+  Dx90_ACF2 = "Combined measures: (A) + (C) + (D)",
+  Combined = "All measures combined"
 )
 
 
@@ -76,14 +77,17 @@ d_avt <- bind_rows(lapply(c(IND = "IND", ZAF = "ZAF"), function(country) {
       U = quantile(value, ru[2])
     ) %>% 
     ungroup() %>% 
+    filter(Scenario %in% names(sel_scs[[country]])) %>% 
     mutate(
+      Scenario = ifelse(Scenario %in% c("PPM90_ACF2", "Dx90_ACF2"), "Combined", Scenario),
       Scenario = factor(Scenario, names(scs)),
       Country = country
     ) %>% 
-    filter(Scenario %in% names(sel_scs[[country]])) %>% 
+    
     filter(Time <= t_end)
   
 }))
+
 
 
 g_avt <- d_avt %>% 
@@ -100,15 +104,69 @@ g_avt <- d_avt %>%
              labeller = labeller(Index=c(AvtInc = "Cumulative Cases Averted", AvtMor = "Cumulative Deaths Averted"),
                                  Country=c(IND = "India", ZAF = "South Africa"))) +
   expand_limits(y = -0.03) +
-  theme(legend.position = "bottom", legend.direction = "vertical")
+  theme(legend.position = "bottom", legend.direction = "vertical") + 
+  labs(caption = "India: (B) + (C) + (D)\nSouth Africa: (A) + (C) + (D)")
 
+g_avt
+
+
+
+
+d_prev <- bind_rows(local({
+  load("data/IND/d_prev.rdata")
+  d_prev
+}), local({
+  
+  load("data/ZAF/d_prev.rdata")
+  d_prev
+})) %>% filter(State != "PreTx" & Tag == "All")
+
+
+g_tbps <- d_prev %>% 
+  mutate(
+    Prev = N_Prev / N_Subject,
+    State = factor(State, rev(c("Asym", "Sym", "CS")))
+  ) %>% 
+  ggplot() + 
+  geom_bar(aes(x = Prev, y = "All", fill = State), stat = "identity") +
+  scale_x_continuous("Prevalence, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  scale_y_discrete("Untreated TB from TBPS", labels = " ") +
+  scale_fill_discrete("State", 
+                      labels=c(Asym = "Subclinical", 
+                               Sym = "Pre care-seeking", 
+                               CS = "Sought care"), guide = guide_legend(reverse = TRUE)) +
+  facet_grid(.~Country) +
+  theme(legend.position = "bottom")
+
+g_tbps
+
+
+g_tbpsv <- d_prev %>% 
+  mutate(
+    Country = factor(Country, c("South Africa", "India")),
+    Prev = N_Prev / N_Subject,
+    State = factor(State, rev(c("Asym", "Sym", "CS")))
+  ) %>% 
+  ggplot() + 
+  geom_bar(aes(x = Prev, y = Country, fill = State), stat = "identity") +
+  scale_x_continuous("Prevalence, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  scale_y_discrete("Untreated TB from TBPS") +
+  scale_fill_discrete("State", labels=c(Asym = "Subclinical", Sym = "Pre care-seeking", CS = "Sought care"), guide = guide_legend(reverse = TRUE)) +
+  theme(legend.position = "bottom")
 
 
 ggsave(g_avt, filename = here::here("results", "figs", "g_avt.png"), width = 8, height = 7.5)
 
 
 
+g_bind <- ggpubr::ggarrange(g_tbps, g_avt, nrow = 2, heights = c(1, 4))
 
+ggsave(g_bind, filename = here::here("results", "figs", "g_avt_v2.png"), width = 8, height = 10.5)
+
+
+g_bind <- ggpubr::ggarrange(g_tbpsv, g_avt, nrow = 2, heights = c(1, 4))
+
+ggsave(g_bind, filename = here::here("results", "figs", "g_avt_v3.png"), width = 8, height = 10.5)
 
 
 

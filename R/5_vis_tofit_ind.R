@@ -32,8 +32,8 @@ tarq  <- read_csv(here::here("data", "pars", iso, "targets_q.csv"))
 
 
 
-mss0 <- read_csv(here::here("results", "A_" + iso, "RunPost.csv"))
-mss1 <- read_csv(here::here("results", "B_" + iso, "RunPost.csv")) 
+mss0 <- read_csv(here::here("results", "C_" + iso, "RunPost.csv"))
+mss1 <- read_csv(here::here("results", "D_" + iso, "RunPost.csv")) 
 
 mss0 %>% 
   select(Year = Time, IncR, MorR, CNR, Key) %>% 

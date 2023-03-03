@@ -2,6 +2,7 @@ from sim.core.inputs import load_inputs
 from sim.core.cascade import RepoCascade
 from sim.core.dy import Model
 from sim.zaf.dhiv import ModelHIV
+from sim.ind.dpupr import ModelPupr
 from sims_pars import bayes_net_from_script
 from sims_pars.fitting import AbsObjectiveSimBased
 import numpy as np
@@ -67,7 +68,7 @@ class ObjectiveHIV(Objective):
         return - dist
 
 
-def load_objective(folder_inputs, file_cs, exo=None, hiv=False):
+def load_objective(folder_inputs, file_cs, exo=None, spec=None):
     pars_cs = pd.read_csv(file_cs)
     repo_cs = RepoCascade(pars_cs)
 
@@ -76,23 +77,28 @@ def load_objective(folder_inputs, file_cs, exo=None, hiv=False):
     with open(f'{folder_inputs}/prior.txt', 'r') as f:
         bn = bayes_net_from_script(f.read())
 
-    if not hiv:
-        m = Model(inp)
-        targets = pd.read_csv(f'{folder_inputs}/targets.csv').set_index('Year')
-        obj = Objective(targets, bn=bn, model=m, cs=repo_cs, exo=exo)
-    else:
+    if spec == 'HIV':
         m = ModelHIV(inp)
         targets = {
             'All': pd.read_csv(f'{folder_inputs}/targets.csv').set_index('Year'),
             'HIV': pd.read_csv(f'{folder_inputs}/targets_hiv.csv').set_index('Year')
         }
         obj = ObjectiveHIV(targets, bn=bn, model=m, cs=repo_cs, exo=exo)
+    elif spec == 'PuPr':
+        m = ModelPupr(inp)
+        targets = pd.read_csv(f'{folder_inputs}/targets.csv').set_index('Year')
+        targets = targets[targets.index >= 2017]
+        obj = Objective(targets, bn=bn, model=m, cs=repo_cs, exo=exo)
+    else:
+        m = Model(inp)
+        targets = pd.read_csv(f'{folder_inputs}/targets.csv').set_index('Year')
+        obj = Objective(targets, bn=bn, model=m, cs=repo_cs, exo=exo)
 
     return obj
 
 
 if __name__ == '__main__':
-    obj = load_objective('../../data/pars/ZAF', '../../results/pars_ZAF.csv', hiv=False)
+    obj = load_objective('../../data/pars/ZAF', '../../results/pars_ZAF.csv', spec="HIV")
 
     for do in obj.Domain:
         print(do)
@@ -102,7 +108,7 @@ if __name__ == '__main__':
     print(obj.calc_likelihood(p0))
 
     # With HIV
-    obj = load_objective('../../data/pars/ZAF', '../../results/pars_ZAF.csv', hiv=True)
+    obj = load_objective('../../data/pars/ZAF', '../../results/pars_ZAF.csv', spec="HIV")
 
     for do in obj.Domain:
         print(do)
@@ -110,3 +116,14 @@ if __name__ == '__main__':
     p0 = obj.sample_prior()
 
     print(obj.calc_likelihood(p0))
+
+    # With Public / Private
+    obj = load_objective('../../data/pars/IND', '../../results/pars_IND.csv', spec="PuPr")
+
+    for do in obj.Domain:
+        print(do)
+
+    p0 = obj.sample_prior()
+
+    print(obj.calc_likelihood(p0))
+
