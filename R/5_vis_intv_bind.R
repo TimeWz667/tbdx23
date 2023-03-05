@@ -129,8 +129,8 @@ g_tbps <- d_prev %>%
   ) %>% 
   ggplot() + 
   geom_bar(aes(x = Prev, y = "All", fill = State), stat = "identity") +
-  scale_x_continuous("Prevalence, per 100 000", labels = scales::number_format(scale = 1e5)) +
-  scale_y_discrete("Untreated TB from TBPS", labels = " ") +
+  scale_x_continuous("Prevalence, untreated TB, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  scale_y_discrete("", labels = " ") +
   scale_fill_discrete("State", 
                       labels=c(Asym = "Subclinical", 
                                Sym = "Pre care-seeking", 
@@ -149,8 +149,8 @@ g_tbpsv <- d_prev %>%
   ) %>% 
   ggplot() + 
   geom_bar(aes(x = Prev, y = Country, fill = State), stat = "identity") +
-  scale_x_continuous("Prevalence, per 100 000", labels = scales::number_format(scale = 1e5)) +
-  scale_y_discrete("Untreated TB from TBPS") +
+  scale_x_continuous("Prevalence, untreated TB, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  scale_y_discrete("") +
   scale_fill_discrete("State", labels=c(Asym = "Subclinical", Sym = "Pre care-seeking", CS = "Sought care"), guide = guide_legend(reverse = TRUE)) +
   theme(legend.position = "bottom")
 
