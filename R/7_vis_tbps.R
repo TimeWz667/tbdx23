@@ -54,8 +54,14 @@ ggsave(g_tbps_cs, filename = here::here("results", "g_tbps_fill.png"), width = 5
 
 
 
+1.149369
 
 
+d_prev %>% 
+  mutate(
+    Pr = N_Prev / N_Subject * rep(c(1.149369, 0.9090663), each = 3) * 1e5
+  )
 
+0.9090663
 
 

@@ -82,6 +82,13 @@ g_delay <- cas %>%
   expand_limits(x = c(0, 1))
 
 
+cas %>%
+  filter(Type == "Delay") %>% 
+  mutate(Index = factor(Index, c("Tot", "Sys", "Pat"))) %>% 
+  filter(Scenario == "Baseline") %>% 
+  mutate(across(c(M, L, U), scales::number_format(scale = 12)))
+
+
 g_cascade <- cas %>%
   filter(Type == "Pr") %>% 
   ggplot() +

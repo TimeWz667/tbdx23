@@ -104,11 +104,21 @@ g_avt <- d_avt %>%
              labeller = labeller(Index=c(AvtInc = "Cumulative Cases Averted", AvtMor = "Cumulative Deaths Averted"),
                                  Country=c(IND = "India", ZAF = "South Africa"))) +
   expand_limits(y = -0.03) +
-  theme(legend.position = "bottom", legend.direction = "vertical") + 
-  labs(caption = "India: (B) + (C) + (D)\nSouth Africa: (A) + (C) + (D)")
+  theme(legend.position = "bottom", legend.direction = "vertical")# + 
+  #labs(caption = "India: (B) + (C) + (D)\nSouth Africa: (A) + (C) + (D)")
 
 g_avt
 
+
+d_avt %>% 
+  filter(Time == 2030) %>% 
+  mutate(
+    Scenario = scs[Scenario],
+    across(c(M, L, U), scales::percent_format(accuracy = 0.1)),
+    mlu = paste0(M, " (", L, " - ", U, ")")
+  ) %>% 
+  arrange(Country, Index, Scenario, Index) %>% 
+  write_csv(here::here("results", "avt.csv"))
 
 
 
@@ -128,8 +138,8 @@ g_tbps <- d_prev %>%
     State = factor(State, rev(c("Asym", "Sym", "CS")))
   ) %>% 
   ggplot() + 
-  geom_bar(aes(x = Prev, y = "All", fill = State), stat = "identity") +
-  scale_x_continuous("Prevalence, untreated TB, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  geom_bar(aes(x = Prev, y = 1, fill = State), stat = "identity", position = "fill") +
+  scale_x_continuous("Proportion of untreated TB, %", labels = scales::percent_format()) +
   scale_y_discrete("", labels = " ") +
   scale_fill_discrete("State", 
                       labels=c(Asym = "Subclinical", 
@@ -148,8 +158,8 @@ g_tbpsv <- d_prev %>%
     State = factor(State, rev(c("Asym", "Sym", "CS")))
   ) %>% 
   ggplot() + 
-  geom_bar(aes(x = Prev, y = Country, fill = State), stat = "identity") +
-  scale_x_continuous("Prevalence, untreated TB, per 100 000", labels = scales::number_format(scale = 1e5)) +
+  geom_bar(aes(x = Prev, y = Country, fill = State), stat = "identity", position = "fill") +
+  scale_x_continuous("Proportion of untreated TB, %", labels = scales::percent_format()) +
   scale_y_discrete("") +
   scale_fill_discrete("State", labels=c(Asym = "Subclinical", Sym = "Pre care-seeking", CS = "Sought care"), guide = guide_legend(reverse = TRUE)) +
   theme(legend.position = "bottom")
