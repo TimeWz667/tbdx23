@@ -17,3 +17,4 @@ notebooks/*-checkpoint.ipynb
 /notebooks/.ipynb_checkpoints/*
 data/AIDS/
 /results/*.7z
+/docs/product/*
