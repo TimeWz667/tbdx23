@@ -59,7 +59,11 @@ ggsave(g_tbps_cs, filename = here::here("results", "g_tbps_fill.png"), width = 5
 
 d_prev %>% 
   mutate(
-    Pr = N_Prev / N_Subject * rep(c(1.149369, 0.9090663), each = 3) * 1e5
+    Pr = N_Prev / N_Subject * rep(c(1.149369, 0.9090663), each = 3),
+    L = qbinom(0.025, size = N_Subject, prob = Pr) / N_Subject,
+    U = qbinom(0.975, size = N_Subject, prob = Pr) / N_Subject,                           
+    
+    across(c(Pr, L, U), scales::number_format(scale = 1e5))
   )
 
 0.9090663

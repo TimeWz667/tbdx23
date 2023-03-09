@@ -81,15 +81,16 @@ tar <- bind_rows(lapply(c(IND = "IND", ZAF = "ZAF"), function(country) {
 
 
 g_ts <- d_ts %>% 
+  filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2015) %>% 
   ggplot() +
-  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), alpha = 0.2) +
+  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), linetype=2, alpha = 0.1) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   # geom_pointrange(data = d2plot, aes(x = Year, y = M, ymin = L, ymax = U)) + 
-  geom_point(data = tar, 
+  geom_point(data = tar %>% filter(Index %in% c("IncR", "MorR")), 
              aes(x = Year, y = value)) +
   scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
-  scale_x_continuous("Year", breaks = c(2015, 2023, 2025, 2030, 2035)) +
+  scale_x_continuous("Year", breaks = c(2015, 2017, 2020, 2023, 2025, 2030, 2035)) +
   scale_fill_brewer(palette="Dark2", labels = scs) +
   scale_colour_brewer(palette="Dark2", labels = scs) +
   expand_limits(y = 0) +
@@ -98,6 +99,8 @@ g_ts <- d_ts %>%
                                  Country=c(IND = "India", ZAF = "South Africa"))) +
   theme(legend.position = "bottom", legend.direction = "vertical")
 
+
+g_ts
 
 
 ggsave(g_ts, filename = here::here("results", "figs", "g_ts.png"), width = 8, height = 7.5)
