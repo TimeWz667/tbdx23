@@ -11,7 +11,7 @@ load(here::here("data", "ZAF", "d_hiv.rdata"))
 year0 <- 2010
 
 
-pars_pop <- get_pars_pop(d_pop_all, year0)
+pars_pop <- jsonlite::read_json(here::here("pars", "ZAF", "pars_pop.json"), simplifyVector = T)
 
 
 
@@ -245,4 +245,4 @@ pars_hiv <- list(
 )
 
 
-jsonlite::write_json(pars_hiv, here::here("data", "pars", "ZAF", "pars_hiv.json"), digits = 10, auto_unbox = T)
+jsonlite::write_json(pars_hiv, here::here("pars", "ZAF", "pars_hiv.json"), digits = 10, auto_unbox = T)
