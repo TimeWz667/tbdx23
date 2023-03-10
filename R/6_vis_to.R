@@ -33,15 +33,3 @@ to %>%
     p_succ_pri = sum(N_Tx_Succ_Pri) / sum(N_Tx_Ini_Pri),
     p_die_pri = sum(N_Tx_Die_Pri) / sum(N_Tx_Ini_Pri)
   )
-
-
-to %>% 
-  filter(iso3 %in% c("IND", "ZAF")) %>% 
-  filter(year >= 2015) %>% 
-  select(country, year, newrel_succ, newrel_coh, newrel_died) %>% 
-  group_by(country) %>%
-  summarise(
-    p_succ = sum(newrel_succ) / sum(newrel_coh),
-    p_died = sum(newrel_died) / sum(newrel_coh)
-  )
-

@@ -73,10 +73,10 @@ qcnr %>%
 
 qcnr %>% filter(iso == "IND") %>% 
   select(Country, Time, Year, q, QCNR) %>% 
-  write_csv(file = here::here("data", "pars", "IND", "targets_q.csv"))
+  write_csv(file = here::here("pars", "IND", "targets_q.csv"))
 
 
 qcnr %>% filter(iso == "ZAF") %>% 
   select(Country, Time, Year, q, QCNR) %>% 
-  write_csv(file = here::here("data", "pars", "ZAF", "targets_q.csv"))
+  write_csv(file = here::here("pars", "ZAF", "targets_q.csv"))
 

@@ -16,13 +16,5 @@ d_burden_all <- db %>%
   )
 
 
-d_burden_all %>% 
-  data.frame()
-
 d_burden <- d_burden_all %>% filter(Country == "India")
 save(d_burden, file = here::here("data", "IND", "d_burden.rdata"))
-
-
-d_burden <- d_burden_all %>% filter(Country != "India")
-save(d_burden, file = here::here("data", "ZAF", "d_burden.rdata"))
-
