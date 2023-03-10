@@ -107,7 +107,7 @@ def load_inputs(root):
 
 
 if __name__ == '__main__':
-    with open('../../data/pars/IND/pars_pop.json', 'r') as f:
+    with open('../../pars/IND/pars_pop.json', 'r') as f:
         src = json.load(f)
 
     demo = Demography(src)
@@ -118,13 +118,13 @@ if __name__ == '__main__':
     print('Year: 2030')
     print(demo(2030))
 
-    with open('../../data/pars/IND/pars_tx.json', 'r') as f:
+    with open('../../pars/IND/pars_tx.json', 'r') as f:
         src = json.load(f)
 
     inp = load_inputs('../../data/pars/ZAF')
     print(inp)
 
-    with open('../../data/pars/ZAF/pars_hiv.json', 'r') as f:
+    with open('../../pars/ZAF/pars_hiv.json', 'r') as f:
         src = json.load(f)
 
     hiv = HIV(src)

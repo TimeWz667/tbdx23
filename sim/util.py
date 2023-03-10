@@ -40,4 +40,3 @@ def extract_tr(y, trs, fil):
     frs = np.array([tr[0] for tr in trs], int)
     rates = np.array([tr[2] for tr in trs])
     return extract_tr0(y, frs, rates)
-

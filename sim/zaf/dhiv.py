@@ -433,7 +433,7 @@ if __name__ == '__main__':
 
     rd.seed(1167)
 
-    with open('../../data/pars/ZAF/prior.txt', 'r') as f:
+    with open('../../pars/ZAF/prior.txt', 'r') as f:
         r_prior = bayes_net_from_script(f.read())
 
     pars_cs = pd.read_csv('../../results/pars_ZAF.csv')

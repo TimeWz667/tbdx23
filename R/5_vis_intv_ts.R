@@ -84,12 +84,12 @@ g_ts <- d_ts %>%
   filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2015) %>% 
   ggplot() +
-  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), linetype=2, alpha = 0.1) +
+  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario, colour = Scenario), linetype=2, alpha = 0.1) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   # geom_pointrange(data = d2plot, aes(x = Year, y = M, ymin = L, ymax = U)) + 
   geom_point(data = tar %>% filter(Index %in% c("IncR", "MorR")), 
              aes(x = Year, y = value)) +
-  scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  scale_y_continuous("Rate per 100,000 population", labels = scales::number_format(scale = 1e5)) + 
   scale_x_continuous("Year", breaks = c(2015, 2017, 2020, 2023, 2025, 2030, 2035)) +
   scale_fill_brewer(palette="Dark2", labels = scs) +
   scale_colour_brewer(palette="Dark2", labels = scs) +

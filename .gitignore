@@ -18,3 +18,4 @@ notebooks/*-checkpoint.ipynb
 data/AIDS/
 /results/*.7z
 /docs/product/*
+out/*
