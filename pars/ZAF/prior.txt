@@ -1,4 +1,9 @@
 PCore dy {
+        // mortality
+        r_die_ut = 0.127
+        rr_die_a ~ unif(0, 1)
+
+
         // transmission
         beta ~ unif(1, 20)
 
@@ -6,26 +11,35 @@ PCore dy {
         rr_inf_cs = 1
 
         rr_sus_slat ~ unif(0.2, 0.8) # rr of reinfection (SLat vs U)
-        rr_sus_rec ~ unif(0.14, 0.31)  # rr of reinfection (Rec vs U)
+        rr_sus_rec ~ triangle(0.14, 0.2, 0.3)  # rr of reinfection (Rec vs U)
 
         // Life history
+        r_onset ~ triangle(0.5, 1, 6)
+
         r_lat = 0.5
-        p_primary ~ unif(0.09, 0.14)   # probability of primary progression
+        p_primary ~ unif(0.09, 0.14)  # probability of primary progression
         r_act = r_lat * p_primary / (1 - p_primary)
 
         r_clear ~ unif(0.02, 0.04)
-        r_sc ~  unif(0.15, 0.25)  # self-cure
+        r_sc ~  triangle(0.15, 0.2, 0.25)  # self-cure
 
         r_stab = 2 / 3  # stabilisation rate,
-        r_react = 0.001  # Activation of Latent TB
-        r_relapse = 0.001  # relapse after stabilisation,
-        r_relapse_td = 0.008  # relapse after treatment default,
-        r_relapse_tc = 0.004  # relapse after treatment completion
+        r_react ~ triangle(0.0005, 0.001, 0.0015) # Activation of Latent TB
+        r_relapse ~ triangle(0.0011, 0.002, 0.0019)  # relapse after stabilisation,
+        r_relapse_td ~ triangle(0.105, 0.14, 0.175)  # relapse after treatment default,
+        r_relapse_tc ~ triangle(0.024, 0.032, 0.04)  # relapse after treatment completion
 
         irr_hiv ~ unif(1, 50)
         irr_art ~ unif(1, irr_hiv)
 
+        // Care-seeking and diagnosis
+        r_csi ~ unif(1, 15)
+        r_recsi ~ unif(1, 15)
+
+        p_dx = 0.45
+
+        ppv ~ unif(0.5, 0.9)
+
         // Treatment
         dur_succ = 0.5
-        adr = 0
 }

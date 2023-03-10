@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit
 
 __author__ = 'Chu-Chang Ku'
-__all__ = ['calc_dy', 'extract_tr']
+__all__ = ['calc_dy', 'extract_tr', 'blend']
 
 
 @njit
@@ -40,3 +40,8 @@ def extract_tr(y, trs, fil):
     frs = np.array([tr[0] for tr in trs], int)
     rates = np.array([tr[2] for tr in trs])
     return extract_tr0(y, frs, rates)
+
+
+def blend(x0, x1, wt):
+    return x0 + wt * (x1 - x0)
+
