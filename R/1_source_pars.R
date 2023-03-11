@@ -50,7 +50,7 @@ for (iso in c("IND", "ZAF")) {
 }
 
 
-# Treatment outcomes
+# Treatment outcomes -----
 iso <- "IND"
 load(here::here("data", iso, "d_tx_itr.rdata"))
 
@@ -60,7 +60,7 @@ d_tx_itr <- as.list(d_tx_itr)
 ptx <- list(
   All = list(
     Succ = d_tx_itr$p_succ_all,
-    Die = d_tx_itr$p_die_all
+    Death = d_tx_itr$p_die_all
   ),
   Pub = list(
     Succ = d_tx_itr$p_succ_pub,

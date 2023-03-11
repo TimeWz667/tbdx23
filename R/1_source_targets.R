@@ -35,6 +35,63 @@ for (iso in c("ZAF", "IND")) {
 }
 
 
+# TBPS data
+
+iso <- "IND"
+
+
+load(here::here("data", iso, "d_prev.rdata"))
+load(here::here("data", iso, "d_cases.rdata"))
+
+targets_prev <- d_prev %>%
+  filter(State != "PreTx" & Tag == "All") %>% 
+  mutate(
+    Year = 2019,
+    Index = paste0("Prev", substr(State, 1, 1))
+  ) %>% 
+  left_join(
+    d_case_all %>% 
+      mutate(Amp = Amp_ep / Amp_age) %>% 
+      select(Year, Tag, Amp)
+  ) %>% 
+  mutate(
+    N = N_Subject,
+    m = N_Prev / N_Subject * Amp,
+    eps = (qbinom(0.975, prob = m, size = N) - qbinom(0.025, prob = m, size = N)) / N,
+    error = eps / m
+  ) %>% 
+  select(Year, Tag, Index, N, m, eps, error)
+
+write_csv(targets_prev, file = here::here("pars", iso, "targets_prev.csv"))
+
+
+
+iso <- "ZAF"
+
+
+load(here::here("data", iso, "d_prev.rdata"))
+load(here::here("data", iso, "d_cases.rdata"))
+
+targets_prev <- d_prev %>%
+  filter(State != "PreTx" & Tag == "All") %>% 
+  mutate(
+    Index = paste0("Prev", substr(State, 1, 1))
+  ) %>% 
+  left_join(
+    d_case_all %>% 
+      mutate(Amp = Amp_ep / Amp_age) %>% 
+      select(Year, Tag, Amp)
+  ) %>% 
+  mutate(
+    N = N_Subject,
+    m = N_Prev / N_Subject * Amp,
+    eps = (qbinom(0.975, prob = m, size = N) - qbinom(0.025, prob = m, size = N)) / N,
+    error = eps / m
+  ) %>% 
+  select(Year, Tag, Index, N, m, eps, error)
+
+write_csv(targets_prev, file = here::here("pars", iso, "targets_prev.csv"))
+
 
 # India Targets with public/private ----
 iso <- "IND"

@@ -13,6 +13,8 @@ stan/*.rds
 
 sim/__pycache__/*
 sim/*/__pycache__/*
+model/__pycache__/*
+model/*/__pycache__/*
 notebooks/*-checkpoint.ipynb
 /notebooks/.ipynb_checkpoints/*
 data/AIDS/
