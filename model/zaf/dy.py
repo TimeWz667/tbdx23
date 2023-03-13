@@ -242,6 +242,7 @@ class ModelZAF(AbsModel):
             'N_HIV': ns[1],
             'N_ART': ns[2],
             'Prev': y[I.PTB].sum() / n,
+            'PrevUt': y[I.UtTB].sum() / n,
             'PrevA': y[I.Asym].sum() / n,
             'PrevS': y[I.Sym].sum() / n,
             'PrevC': y[I.ExCS].sum() / n,

@@ -83,9 +83,9 @@ class AbsModel(metaclass=ABCMeta):
             'PrevC': ms.PrevC.rolling(2).mean().shift(-1),
         }).iloc[:-1, ]
 
-        ms1['PrA'] = ms1['PrevA'] / ms1['Prev']
-        ms1['PrS'] = ms1['PrevS'] / ms1['Prev']
-        ms1['PrC'] = ms1['PrevC'] / ms1['Prev']
+        ms1['PrA'] = ms1['PrevA'] / ms1['PrevUt']
+        ms1['PrS'] = ms1['PrevS'] / ms1['PrevUt']
+        ms1['PrC'] = ms1['PrevC'] / ms1['PrevUt']
 
         return ms1
 

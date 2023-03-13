@@ -220,6 +220,7 @@ class ModelIND(AbsModel):
             'Year': t,
             'N': n,
             'Prev': y[I.PTB].sum() / n,
+            'PrevUt': y[I.UtTB].sum() / n,
             'PrevA': y[I.Asym].sum() / n,
             'PrevS': y[I.Sym].sum() / n,
             'PrevC': y[I.ExCS].sum() / n,

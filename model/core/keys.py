@@ -12,6 +12,7 @@ RSt = 9
 
 Infectious = [Asym, Sym, ExCS]
 PTB = [Asym, Sym, ExCS, Tx]
+UtTB = [Asym, Sym, ExCS]
 LTBI = [FLat, SLat, RLow, RHigh, RSt]
 
 N_State_TB = 10
