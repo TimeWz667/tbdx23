@@ -78,6 +78,7 @@ class AbsModel(metaclass=ABCMeta):
             'PrLat': ms.LTBI.rolling(2).mean().shift(-1),
             'PrRecent': (ms.CumIncRecent.diff() / ms.CumInc.diff()).shift(-1),
             'Prev': ms.Prev.rolling(2).mean().shift(-1),
+            'PrevUt': ms.PrevUt.rolling(2).mean().shift(-1),
             'PrevA': ms.PrevA.rolling(2).mean().shift(-1),
             'PrevS': ms.PrevS.rolling(2).mean().shift(-1),
             'PrevC': ms.PrevC.rolling(2).mean().shift(-1),
