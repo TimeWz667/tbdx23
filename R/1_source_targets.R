@@ -197,7 +197,7 @@ targets_hiv <- d_hiv %>%
   separate(name, c("Index", "name")) %>% 
   pivot_wider() %>% 
   rename(m = mu) %>% 
-  mutate(error = eps / m)
+  mutate(error = eps / m, Tag = ifelse(Tag == "HIV", "PLHIV", "NonHIV")) %>% 
   arrange(Tag, Year)
 
 

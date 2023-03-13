@@ -144,6 +144,8 @@ class ModelIND(AbsModel):
         p_cs_pub, p_dx_pub, p_dx_pri = pars['p_cs_pub'], pars['p_dx_pub'], pars['p_dx_pri']
 
         pdx0 = pdx1 = p_cs_pub * p_dx_pub + (1 - p_cs_pub) * p_dx_pri
+        pr_pub = p_cs_pub * p_dx_pub / pdx0
+        pr_pri = 1 - pr_pub
 
         k_cs = np.exp(pars['rt_cs'] * (max(t, 2010) - 2021)) if t < 2021 else 1
         # k_cs = 1
@@ -170,9 +172,11 @@ class ModelIND(AbsModel):
 
         trs = [
             (I.Asym, I.Tx, r_asym_acf, 'acf_a'),
-            (I.Sym, I.Tx, r_det_s, 'det'),
+            (I.Sym, I.Tx, r_det_s * pr_pub, 'det_pub'),
+            (I.Sym, I.Tx, r_det_s * pr_pri, 'det_pri'),
             (I.Sym, I.ExCS, r_fn_s, 'fn'),
-            (I.ExCS, I.Tx, r_det_c, 'det'),
+            (I.ExCS, I.Tx, r_det_c * pr_pub, 'det_pub'),
+            (I.ExCS, I.Tx, r_det_c * pr_pri, 'det_pri'),
             (I.Sym, I.Tx, r_csi_acf, 'acf'),
             (I.ExCS, I.Tx, r_recsi_acf, 'acf'),
             (I.Tx, I.RLow, pars['r_ts'], 'txs'),
@@ -180,12 +184,16 @@ class ModelIND(AbsModel):
         ]
 
         dy += calc_dy(y, trs)
-        calc['det'] = extract_tr(y, trs, fil=lambda x: x[3] == 'det')
+        calc['det_pub'] = extract_tr(y, trs, fil=lambda x: x[3] == 'det_pub')
+        calc['det_pri'] = extract_tr(y, trs, fil=lambda x: x[3] == 'det_pri')
+        calc['det'] = calc['det_pub'] + calc['det_pri']
         calc['acf'] = extract_tr(y, trs, fil=lambda x: x[3] == 'acf')
         calc['acf_a'] = extract_tr(y, trs, fil=lambda x: x[3] == 'acf_a')
 
         da[I.A_Det] += calc['det']
         da[I.A_ACF] += calc['acf']
+        da[I.A_Noti_Pub] += calc['det_pub'] / pars['ppv']
+        da[I.A_Noti_Pri] += calc['det_pri'] / pars['ppv']
         da[I.A_Noti] += calc['det'] / pars['ppv']
 
     def structure_ya(self, y):
@@ -226,9 +234,9 @@ class ModelIND(AbsModel):
             'CumMor': aux[I.A_Mor],
             'CumDet': aux[I.A_Det],
             'CumNoti': aux[I.A_Noti],
-            'CumNotiAcf': aux[I.A_CNR_Acf],
-            'CumNotiPub': aux[I.A_CNR_Pub],
-            'CumNotiPri': aux[I.A_CNR_Pri],
+            'CumNotiAcf': aux[I.A_Noti_Acf],
+            'CumNotiPub': aux[I.A_Noti_Pub],
+            'CumNotiPri': aux[I.A_Noti_Pri],
             'CumACF': aux[I.A_ACF]
         }
         return mea
@@ -282,8 +290,9 @@ if __name__ == '__main__':
     ms.PrevS.plot(ax=axes[0, 0])
     ms.PrevC.plot(ax=axes[0, 0])
     axes[0, 0].set_title('Prevalence')
-    ms.CNR_apx.plot(ax=axes[0, 1])
-    ms.DetR.plot(ax=axes[0, 1])
+    ms.CNR.plot(ax=axes[0, 1])
+    ms.CNR_Pub.plot(ax=axes[0, 1])
+    ms.CNR_Pri.plot(ax=axes[0, 1])
     axes[0, 1].set_title('CNR')
     ms.IncR.plot(ax=axes[1, 0])
     axes[1, 0].set_title('Incidence')
