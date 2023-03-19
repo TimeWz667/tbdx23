@@ -14,7 +14,7 @@ PCore dy {
         rr_sus_rec ~ triangle(0.14, 0.2, 0.3)  # rr of reinfection (Rec vs U)
 
         // Life history
-        r_onset ~ triangle(0.5, 1, 6)
+        r_onset ~ triangle(1.049, 1.501, 2.082)
 
         r_lat = 0.5
         p_primary ~ unif(0.09, 0.14)  # probability of primary progression
@@ -33,7 +33,7 @@ PCore dy {
         irr_art ~ unif(1, irr_hiv)
 
         // Care-seeking and diagnosis
-        r_csi ~ unif(1, 15)
+        r_csi ~ triangle(2.1.975, 3.265, 5.228)
         r_recsi ~ unif(1, 15)
 
         p_dx = 0.45

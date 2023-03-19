@@ -13,7 +13,7 @@ PCore dy {
         rr_sus_rec ~ triangle(0.14, 0.2, 0.3)  # rr of reinfection (Rec vs U)
 
         // Life history
-        r_onset ~ triangle(0.5, 1, 6)
+        r_onset ~ triangle(0.909, 1.0414, 1.251)
 
         r_lat = 0.5
         p_primary ~ unif(0.09, 0.14)  # probability of primary progression
@@ -29,7 +29,7 @@ PCore dy {
         r_relapse_tc ~ triangle(0.024, 0.032, 0.04)  # relapse after treatment completion
 
         // Care-seeking and diagnosis
-        r_csi ~ unif(1, 15)
+        r_csi ~ triangle(2.358, 2.938, 3.831)
         r_recsi ~ unif(1, 15)
 
         p_cs_pub = 0.483
