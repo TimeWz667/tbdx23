@@ -67,7 +67,7 @@ th <- tarhiv %>%
   )
 
 
-g_gof_inch_zaf <- mss0 %>% 
+g_gof_inch <- mss0 %>% 
   select(-IncR_apx) %>% 
   select(Year = Time, starts_with("IncR_"), IncR_All = IncR, Key) %>% 
   pivot_longer(starts_with("IncR_"), names_to = "Index") %>% 
@@ -89,7 +89,7 @@ g_gof_inch_zaf <- mss0 %>%
   facet_wrap(.~Index) +
   expand_limits(y = 0)
 
-g_gof_inch_zaf
+g_gof_inch
 
 
 mss1 %>% 
@@ -137,7 +137,7 @@ bind_rows(
   expand_limits(y = 0)
 
 
-ggsave(g_gof_inch_zaf, filename = here::here("results", "figs", "g_gof_inch_zaf.png"), width = 8, height = 4)
+ggsave(g_gof_inch, filename = here::here("results", "figs", "g_gof_inch_zaf.png"), width = 8, height = 4)
 
 
 

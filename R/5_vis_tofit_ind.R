@@ -35,7 +35,7 @@ tarq  <- read_csv(here::here("data", "pars", iso, "targets_q.csv"))
 mss0 <- read_csv(here::here("results", "C_" + iso, "RunPost.csv"))
 mss1 <- read_csv(here::here("results", "D_" + iso, "RunPost.csv")) 
 
-mss0 %>% 
+g_gof_inch <- mss0 %>% 
   select(Year = Time, IncR, MorR, CNR, Key) %>% 
   pivot_longer(c(IncR, MorR, CNR), names_to = "Index") %>% 
   group_by(Year, Index) %>% 
@@ -124,4 +124,5 @@ bind_rows(
   expand_limits(y = 0)
 
 
+ggsave(g_gof_inch, filename = here::here("results", "figs", "g_gof_inch_ind.png"), width = 8, height = 4)
 

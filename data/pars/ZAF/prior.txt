@@ -22,8 +22,8 @@ PCore dy {
         r_relapse_td ~ triangle(0.105, 0.14, 0.175)  # relapse after treatment default,
         r_relapse_tc ~ triangle(0.024, 0.032, 0.04)  # relapse after treatment completion
 
-        irr_hiv ~ unif(1, 50)
-        irr_art ~ unif(1, irr_hiv)
+        irr_hiv ~ unif(1, 30)
+        irr_art = 1 #~ unif(1, irr_hiv)
 
         // Treatment
         dur_succ = 0.5

@@ -4,7 +4,7 @@ library(tidyverse)
 theme_set(theme_bw())
 
 
-ci_range <- 0.95
+ci_range <- 0.5
 ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
 t_end <- 2030
 

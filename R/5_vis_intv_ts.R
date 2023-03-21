@@ -84,7 +84,7 @@ g_ts <- d_ts %>%
   filter(Index %in% c("IncR", "MorR")) %>% 
   filter(Time > 2015) %>% 
   ggplot() +
-  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario), linetype=2, alpha = 0.1) +
+  geom_ribbon(aes(x = Time, ymin = L, ymax = U, fill = Scenario, colour = Scenario), linetype=2, alpha = 0.1) +
   geom_line(aes(x = Time, y = M, colour = Scenario)) +
   # geom_pointrange(data = d2plot, aes(x = Year, y = M, ymin = L, ymax = U)) + 
   geom_point(data = tar %>% filter(Index %in% c("IncR", "MorR")), 
