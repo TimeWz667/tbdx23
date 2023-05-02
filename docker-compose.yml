@@ -9,3 +9,16 @@ services:
     environment:
       - PASSWORD=Lunar
     container_name: rstan_tbdx
+
+  pars:
+    image: timewz667/sims-pars:v2.6.1
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./model:/home/jovyan/work/model
+      - ./data:/home/jovyan/work/data
+      - ./pars:/home/jovyan/work/pars
+      - ./out:/home/jovyan/work/out
+    ports:
+      - 8888:8888
+    container_name: pars
+
