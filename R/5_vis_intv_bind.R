@@ -46,7 +46,7 @@ d_avt <- bind_rows(lapply(c(IND = "IND", ZAF = "ZAF"), function(country) {
   
   
   mss0 <- read_csv(here::here("results", "I_" + iso, "RunBaseline.csv"))
-  mss1 <- read_csv(here::here("results", "I_" + iso, "RunIntv.csv"))
+  mss1 <- read_csv(here::here("results", "I_" + iso, "RunIntv80.csv"))
   
   avt <- mss1 %>% 
     select(Time, CumInc, CumMor, Key, Scenario) %>% 

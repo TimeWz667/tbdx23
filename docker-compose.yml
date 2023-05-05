@@ -14,9 +14,9 @@ services:
     image: timewz667/sims-pars:v2.6.1
     volumes:
       - ./notebooks:/home/jovyan/work
-      - ./model:/home/jovyan/work/model
+      - ./sim:/home/jovyan/work/sim
       - ./data:/home/jovyan/work/data
-      - ./pars:/home/jovyan/work/pars
+      - ./results:/home/jovyan/work/results
       - ./out:/home/jovyan/work/out
     ports:
       - 8888:8888
