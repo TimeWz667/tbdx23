@@ -14,7 +14,10 @@ services:
     image: timewz667/sims-pars:latest
     volumes:
       - ./notebooks:/home/jovyan/work
+      -
     ports:
       - 8888:8888
+    environment:
+      - JUPYTER_TOKEN=hi
     container_name: pars
 
