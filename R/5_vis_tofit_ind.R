@@ -6,7 +6,9 @@ theme_set(theme_bw())
 
 
 country = "IND"
-iso = glue::as_glue(country)
+iso <- glue::as_glue(country)
+ci_range <- 0.95
+ru <- c((1 - ci_range) / 2, (1 + ci_range) / 2)
 
 
 d2plot <- local({
@@ -45,8 +47,8 @@ g_pre <- mss0 %>%
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -62,6 +64,49 @@ g_pre <- mss0 %>%
 g_pre
 
 
+g_pre_burden <- mss0 %>% 
+  select(Year = Time, IncR, MorR, Key) %>% 
+  pivot_longer(c(IncR, MorR), names_to = "Index") %>% 
+  group_by(Year, Index) %>% 
+  summarise(
+    M = mean(value),
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
+  ) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_ribbon(aes(x = Year, ymin = L, ymax = U), alpha = 0.2) +
+  geom_line(aes(x = Year, y = M)) + 
+  geom_pointrange(data = d2plot %>% filter(Year <= 2019), aes(x = Year, y = M, ymin = L, ymax = U)) + 
+  scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  facet_wrap(.~Index, scales = "free_y", labeller = labeller(Index=c(IncR="Incidence", MorR="Mortality", CNR="Case notification"))) +
+  expand_limits(y = 0)
+
+g_pre_burden
+
+
+g_pre_cnr <- mss0 %>% 
+  select(Year = Time, CNR, Key) %>% 
+  pivot_longer(c(CNR), names_to = "Index") %>% 
+  group_by(Year, Index) %>% 
+  summarise(
+    M = mean(value),
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
+  ) %>% 
+  ungroup() %>% 
+  ggplot() +
+  geom_ribbon(aes(x = Year, ymin = L, ymax = U), alpha = 0.2) +
+  geom_line(aes(x = Year, y = M)) + 
+  geom_point(data = tar %>% select(Year, CNR = CNR_mu) %>% mutate(Index = "CNR"), 
+             aes(x = Year, y = CNR)) +
+  scale_y_continuous("per 100 000", labels = scales::number_format(scale = 1e5)) + 
+  facet_wrap(.~Index, scales = "free_y", labeller = labeller(Index=c(IncR="Incidence", MorR="Mortality", CNR="Case notification"))) +
+  expand_limits(y = 0)
+
+g_pre_cnr
+
+
 ## COVID disruption
 
 g_covid <- bind_rows(
@@ -72,8 +117,8 @@ g_covid <- bind_rows(
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.25),
-    U = quantile(value, 0.75)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>% 
   ggplot() +
@@ -99,8 +144,8 @@ prev_pr <- d_prev %>%
     Index = State,
     N = sum(N_Prev),
     M = N_Prev / N,
-    L = qbinom(0.025, N, M) / N,
-    U = qbinom(0.975, N, M) / N
+    L = qbinom(ru[1], N, M) / N,
+    U = qbinom(ru[2], N, M) / N
   ) %>%
   mutate(Index = factor(Index, levels = c("Asym", "Sym", "CS")))
 
@@ -117,8 +162,8 @@ g_prev <- bind_rows(mss0, mss1) %>%
   group_by(Year, Index) %>% 
   summarise(
     M = mean(value),
-    L = quantile(value, 0.025),
-    U = quantile(value, 0.975)
+    L = quantile(value, ru[1]),
+    U = quantile(value, ru[2])
   ) %>% 
   ungroup() %>%
   mutate(Index = factor(Index, c("Asym", "Sym", "CS"))) %>% 
@@ -134,6 +179,40 @@ g_prev
 
 
 
+g_prprev <- bind_rows(
+    bind_rows(mss0, mss1) %>% 
+      filter(Time == 2019) %>%
+      mutate(
+        Asym = PrevA / Prev,
+        Sym = PrevS / Prev,
+        CS = PrevC / Prev
+      ) %>% 
+      select(Year = Time, Asym, Sym, CS, Key) %>% 
+      pivot_longer(c(Asym, Sym, CS), names_to = "Index") %>% 
+      group_by(Year, Index) %>% 
+      summarise(
+        M = mean(value),
+        L = quantile(value, ru[1]),
+        U = quantile(value, ru[2])
+      ) %>% 
+      ungroup() %>% 
+      mutate(Src="simulated"),
+    prev_pr %>% 
+      select(Year, Index = State, M:U) %>% 
+      mutate(Src="target data")
+  ) %>%
+  mutate(Index = factor(Index, c("Asym", "Sym", "CS"))) %>% 
+  ggplot() +
+  geom_pointrange(aes(x = Index, y = M, ymin = L, ymax = U, shape = Src), position = position_dodge(0.5)) +
+  scale_y_continuous("percent, %", labels = scales::percent) + 
+  scale_x_discrete("", labels = c(Asym="Asymptomatic", Sym="Before care-seeking", CS="Sought care")) +
+  scale_shape_discrete("") +
+  expand_limits(y = c(0, 1)) +
+  theme(legend.position = c(1, 1), legend.justification = c(1.1, 1.1))
+
+g_prprev
+
+
 g_gof <- ggpubr::ggarrange(
   g_pre + labs(subtitle = "Pre-COVID-19 TB epidemiology"),
   g_prev + labs(subtitle = "TB Prevalence by states"),
@@ -141,10 +220,19 @@ g_gof <- ggpubr::ggarrange(
 )
 
 
-
 ggsave(g_gof, filename = here::here("results", "figs", "g_gof_ind.png"), width = 8, height = 7)
 
 
+g_gof <- ggpubr::ggarrange(
+  g_pre_burden + labs(subtitle = "Pre-COVID-19 TB burden estimates"),
+  ggpubr::ggarrange(
+    g_pre_cnr + labs(subtitle = "Case notification"),
+    g_prprev + labs(subtitle = "TB cascade, 2019")
+  ),
+  nrow = 2
+)
+
+ggsave(g_gof, filename = here::here("results", "figs", "g_gofs_ind.png"), width = 8, height = 7)
 
 
 
