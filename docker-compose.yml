@@ -14,7 +14,10 @@ services:
     image: timewz667/sims-pars:latest
     volumes:
       - ./notebooks:/home/jovyan/work
-      -
+      - ./data:/home/jovyan/work/data
+      - ./out:/home/jovyan/work/out
+      - ./docs:/home/jovyan/work/docs
+      - ./pars:/home/jovyan/work/pars
     ports:
       - 8888:8888
     environment:
