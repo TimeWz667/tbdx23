@@ -259,4 +259,8 @@ g_avt <- ggpubr::ggarrange(plotlist = as, common.legend = T, legend = "bottom")
 
 g_bind5 <- ggpubr::ggarrange(g_tbps, g_avt, nrow = 2, heights = c(1, 4))
 
-ggsave(g_bind5, filename = here::here("results", "figs", "g_avt_v5.png"), width = 8, height = 10.5)
+ggsave(g_bind4, filename = here::here("results", "figs", "g_avt_v4.pdf"), width = 8, height = 10.5)
+ggsave(g_bind4, filename = here::here("results", "figs", "g_avt_v4.eps"), width = 8, height = 10.5)
+
+ggsave(g_bind5, filename = here::here("results", "figs", "g_avt_v5.pdf"), width = 8, height = 10.5)
+ggsave(g_bind5, filename = here::here("results", "figs", "g_avt_v5.eps"), width = 8, height = 10.5)
